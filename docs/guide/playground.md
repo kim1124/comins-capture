@@ -1,0 +1,28 @@
+# Playground
+
+로컬 `0.0.1`, npm 미배포. `npm run dev`로 실행하고 localhost:6004를 엽니다. 공개 `capture()` → 검증 SVG → 출력 경로를 사용합니다. 원본 샘플은 640×420 CSS px입니다.
+
+1. 형식·크기·맞춤을 선택합니다.
+2. 이미지 만들기로 결과와 실제 단위를 확인합니다.
+3. 파일 저장 링크로 내려받습니다. 새 실행·실패·초기화·페이지 종료 시 이전 Blob URL을 해제합니다.
+
+| 설정 | 기본값 | 계약 |
+|---|---|---|
+| 형식 | PNG | JPEG/WebP 인코더 미지원 시 FORMAT_UNSUPPORTED |
+| 크기 | CSS 원본 1배 | 2배, 캡처 당시 DPR, 사용자 크기, 용지 |
+| 사용자 크기 | 800×600 | raster 양의 정수 px; SVG CSS 크기 |
+| 용지 | ISO·세로·300 PPI·여백 0 | A3/A4/A5/B3/B4/B5, ISO/JIS, 가로 방향·여백 |
+| fit·배경 | contain·투명 | cover/stretch, 흰색/짙은 청록. JPEG 기본 흰색 |
+| SVG | CSS 크기 또는 mm | PPI/DPR 사용 안 함. foreignObject 포함 |
+
+목표 크기에서 검증 SVG를 렌더링하며 1배 bitmap을 확대하지 않습니다. PPI는 픽셀 수 계산용이며 파일 DPI 메타데이터를 재작성하지 않습니다. 단일 Canvas는 한 변 8192px·면적 3200만px 이내입니다. 이 화면과 제품 API 모두 단일 출력만 제공합니다.
+
+생성 중 실행·초기화는 비활성화되고 취소가 활성화됩니다. snapshot은 성공·실패 모두 finally에서 dispose합니다. 초기화는 모든 옵션을 기본값으로 되돌리고 결과·다운로드 링크를 지웁니다. 실패하면 오류 코드를 표시하고 이전 성공 이미지를 남기지 않습니다. API·코드 영역은 현재 선택한 실제 옵션을 표시합니다.
+
+소스는 playground/index.html, app.mjs, style.css입니다. 개발 서버는 package root import map을 dist/index.js에 연결합니다. 임의 사이트 URL이나 사용자 HTML 입력은 제공하지 않습니다. 원본 화면 전체 픽셀 일치나 미지원 DOM을 이 데모로 보증하지 않습니다.
+
+정리 이전인 2026-10-13 실제 Chrome·Safari에서 기본 PNG, A4 JPEG, SVG 용지 mm, 당시 crop+800×600, 잘못된 너비, 초기화를 확인했습니다. Chrome WebP는 생성 성공, Safari는 FORMAT_UNSUPPORTED를 표시했습니다. 세부 계약은 [출력 옵션](output-options.md), 브라우저 범위는 [지원](support.md)을 참고하십시오.
+
+2026-10-15 crop UI와 옵션 전달을 제거했습니다. 과거 UI 성공은 현재 후보의 브라우저 검증을 대신하지 않습니다.
+
+2026-10-15 실제 실행 UA Chrome 154에서 기본·2배·800×600 PNG, A4 JPEG, JIS B4 가로 JPEG·mm SVG를 다시 확인했습니다. crop 컨트롤은 없으며 현재 생성 옵션에도 전달하지 않습니다. Safari는 이번 정리 후보에서 재검증하지 않았습니다.

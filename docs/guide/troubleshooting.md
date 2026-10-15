@@ -1,0 +1,61 @@
+# 문제 해결
+
+오류는 `CaptureError.code`와 `stage`로 분기합니다. 오류 메시지에 DOM 원문·전체 자원 URL·내부 cause를 포함하지 않습니다. 재현 정보를 공유할 때도 개인정보·인증정보·실제 사용자 데이터는 제거하십시오.
+
+## 오류별 확인
+
+| code | 먼저 확인할 항목 | 조치 |
+|---|---|---|
+| INVALID_TARGET | null·분리된 노드·0크기·다른 document·body 전체 | 렌더 완료 후 현재 document의 정적 HTMLElement를 전달 |
+| INVALID_OPTIONS | 잘못된 크기·출력 단위·quality·unknown key | [출력 옵션](output-options.md)과 [API](api.md) 대조. SVG에 PPI, PNG에 quality 지정 금지 |
+| UNSUPPORTED_CONTENT | 폼·canvas·iframe·SVG·Shadow DOM·sticky/fixed·animation | [지원 입력](dom-integration.md) 범위의 정적 대상을 구성 |
+| UNSUPPORTED_ENVIRONMENT | DOM 없는 실행·브라우저 필수 기능 부재 | import는 SSR 가능하지만 capture는 클라이언트 이벤트에서 실행 |
+| NETWORK_DISABLED | 기본 deny 상태의 미해결 이미지·폰트 | 신뢰 자원을 resolver Blob으로 제공하거나 허용 출처 명시 |
+| RESOURCE_FAILED | 로드/요청/decode·폰트 오류·redirect·resolver 실패 | 자원 준비 완료·유효 바이트·응답·CORS/CSP와 signal 처리 확인 |
+| RESOURCE_UNVERIFIABLE | 읽을 수 없는 stylesheet·local()·불명확한 자원 | 접근 가능한 선언과 검증 가능한 지원 자원 사용 |
+| SOURCE_CHANGED | 준비·캡처 중 DOM/계산 스타일/위치 변경 | 앱 렌더를 안정화하고 캡처 완료까지 대상 변경 방지 |
+| OUTPUT_LIMIT | Canvas 크기·면적·자원·노드 한도 | 요청 크기 또는 입력 규모를 줄임. 자동 축소·타일 분할 없음 |
+| FORMAT_UNSUPPORTED | 요청 MIME을 네이티브 인코더가 지원하지 않음 | 사용자에게 지원되는 출력 형식을 선택하게 함. 자동 대체 없음 |
+| OUTPUT_MISMATCH | 생성된 출력의 치수·MIME·decode 정합성 불충족 | 실패로 처리하고 최소 fixture·실제 브라우저 버전으로 재현 |
+| ABORTED | 호출자 AbortSignal | 정상 취소 흐름으로 처리. 새 요청에 새 AbortController 사용 |
+| TIMEOUT | 준비·자원·출력 처리 지연 | 원인을 먼저 확인하고 필요 시 호출 timeoutMs 조정 |
+| BUSY | 같은 document의 동시 capture 또는 같은 snapshot의 동시 출력 | 각 작업을 await. 취소를 무시한 이전 작업도 완료될 때까지 대기 |
+| DISPOSED | 해제한 snapshot 사용 | 새 capture로 snapshot 생성 |
+| ENGINE_FAILED | 엔진 직렬화 등 내부 실패 | 최소 정적 fixture·브라우저 버전·code/stage를 정리해 저장소 변경 요청 |
+
+## 다운로드·배율·파일 형식
+
+`toBlob()`은 Blob 자체가 아니라 `{value, meta}`를 반환합니다. 다운로드 URL은 value로 만들고 교체·화면 해제 시 URL.revokeObjectURL로 정리합니다. snapshot.dispose는 앱이 만든 URL을 해제하지 않습니다. 전체 예제는 [시작하기](getting-started.md)를 따릅니다.
+
+PNG가 예상보다 작으면 scale 기본값이 CSS1배임을 확인합니다. device는 캡처 당시 DPR이며 나중에 브라우저 배율을 바꿔도 기존 snapshot의 capturedDpr은 바뀌지 않습니다. PPI는 용지의 픽셀 계산용으로 파일 DPI 메타데이터를 재작성하지 않습니다.
+
+JPEG는 기본 흰 배경이며 명시적 투명 배경은 거부합니다. WebP가 실패하면 실행 브라우저가 해당 MIME을 생성할 수 있는지 확인합니다. SVG는 foreignObject를 포함하므로 순수 벡터나 디자인 도구 호환을 기대하지 않습니다.
+
+## 취소와 해제
+
+```js
+const controller = new AbortController();
+let snapshot;
+try {
+  snapshot = await capture(target, {
+    signal:controller.signal,
+    ready:async ({signal}) => {
+      if (signal.aborted) throw signal.reason;
+      await document.fonts.ready;
+    },
+  });
+  const result = await snapshot.toBlob({format:'png', signal:controller.signal});
+  // result.value를 사용합니다.
+} finally {
+  snapshot?.dispose();
+}
+// 실제 화면 해제 핸들러에서는 진행 중 controller.abort()도 호출합니다.
+```
+
+이 코드는 수명주기 발췌입니다. 앱은 화면 해제 시 abort를 연결하고, ready/resolver가 수행하는 비동기 작업에도 signal을 전달해야 합니다. 취소를 무시한 작업이 남으면 BUSY가 유지될 수 있습니다. timeout을 늘리거나 반복 재시도하는 것만으로 동시 실행 문제를 해결하지 않습니다.
+
+## 로컬 실행과 재현 자료
+
+소스를 수정했는데 데모가 같으면 다시 빌드한 뒤 새로고침합니다. 개발 서버는 HMR을 제공하지 않습니다. 포트 충돌은 `CAPTURE_PORT=6014 npm run dev`처럼 사용하지 않는 포트로 실행합니다.
+
+오류를 보고할 때 패키지 버전 또는 tarball 해시, 실제 실행 브라우저 버전·OS·DPR, 개인정보를 제거한 최소 HTML/CSS, API 옵션, 기대 결과와 실제 code/stage를 포함합니다. 로컬·CI·다른 브라우저에서 실행한 결과를 구분하십시오. 현재 확인 범위는 [지원 상태](support.md)입니다.

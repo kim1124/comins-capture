@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo 'Security check unavailable.' >&2
+  exit 1
+fi
+if ! gitleaks git --pre-commit --staged --redact --no-banner >/dev/null 2>&1; then
+  echo 'Security check failed.' >&2
+  exit 1
+fi

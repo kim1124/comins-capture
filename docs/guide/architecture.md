@@ -1,0 +1,15 @@
+# 엔진과 출력 구조
+
+0.0.1은 고정 SnapDOM 3.2.0 최소 수정본을 내부 엔진으로 사용합니다. 공개 API는 엔진 타입·캐시·플러그인을 노출하지 않습니다.
+
+`capture → ready → DOM 검사 → 자원 준비 → 엔진 직렬화 → SVG 검증·원본 변경 검사 → snapshot → 단일 출력` 순서입니다.
+
+- `src/core/dom.ts`가 공개 capture의 제한된 정적 DOM 경로를 구성합니다.
+- `src/engine/dom-adapter.ts`는 준비된 노드를 엔진에 전달하고 SVG만 반환합니다. 원본 엔진 raster exporter는 사용하지 않습니다.
+- `src/output/svg-renderer.ts`는 검증된 SVG에 크기·용지·fit·배경을 적용하고 전체 Canvas 또는 SVG를 생성합니다.
+- `src/geometry/layout.ts`의 고정 계획을 모든 출력에 사용합니다.
+- `src/lifecycle`은 취소·timeout·늦은 결과 폐기와 lease 해제를 관리합니다.
+
+엔진은 capture 호출 시점에 literal dynamic import로 로드하므로 패키지 루트는 DOM 없이 import 가능합니다. 빌드는 고정 입력 해시를 확인해 최소 수정본과 원문 LICENSE·provenance를 생성합니다.
+
+crop·타일, 실험용 원본 SnapDOM 어댑터, Safari 전용 미완성 출력 wrapper, 부분 성공 경로는 제거했습니다. 단일 출력에도 필요한 SVG clipping과 검증·미지원 입력 거부는 유지합니다. 자체 엔진이나 엔진 자동 fallback은 제공하지 않습니다.
