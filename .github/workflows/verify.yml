@@ -3,7 +3,7 @@ name: Verify
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [codex-governance-v111, main]
   workflow_dispatch:
 
 permissions:

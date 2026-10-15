@@ -41,3 +41,7 @@
 기존 AGENTS/.codex 변경과 raw output은 출시 source commit에 포함하지 않는다. 개인 Git 설정은 공개 신원 검사를 통과하지 못했지만 영구 설정을 바꾸지 않고 commit 명령 단위의 공개 handle+noreply 신원을 사용한다. 실제 commit·hook 결과와 revision은 output/release-review/2026-10-15-sequence/release-source.json에 기록한다.
 
 JIS 원문 대조 완료 후 공개 package 설정과 정식 후보를 확정하고, 원격 CI/필수 체크·게시 및 사이트 동기화·게시 후 확인을 해당 승인 범위에서 이어간다. 이번 준비 결과를 공개 배포 완료로 표시하지 않는다. 적용 Contract v1.12는 승인된 로컬 미게시본이다.
+
+## 로컬 고정 후 원격 정보 확인
+
+출시 대상153파일은 로컬 commit a48f9bbd23b7af4ea0da3f71d8b34d0820068c19로 고정했으며 hook·commit 신원·commit Gitleaks를 통과했다. 원격 저장소는 public, default branch는 codex-governance-v111으로 읽기 확인했다. 원격 트리를 변경하지 않았다. 이에 push branch filter에 현재 기본 브랜치를 추가하는 후속 수정과 문서 갱신을 수행한다. 권한·credential·게시 경로는 바꾸지 않으며 앞선 보안 scan의 고정 snapshot은 수정하지 않는다. 새 delta는 branch filter와 운영 문서에 한정해 검토하고 YAML·shell·Gitleaks 검사를 적용한다. 최종 revision은 release-source.json을 따른다.

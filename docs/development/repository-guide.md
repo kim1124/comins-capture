@@ -55,7 +55,7 @@ python3 -m unittest discover -s output/playwright/workbench -p 'test_*.py'
 
 실행 명령·시각·버전·대상 revision/artifact·pass/fail/skipped/not-run과 한계를 구분해 기록합니다. 원본 로그·화면은 새 `output/` 실행 디렉터리에 두고 이전 증거를 덮어쓰지 않습니다. 공개 가능한 요약만 worklog에 적습니다. 개인 경로·연락처·토큰·DOM 원문은 기록하지 않습니다.
 
-검증 CI workflow는 pull_request·main push·수동 실행에 대응합니다. Actions는 commit SHA, Gitleaks는 버전·archive SHA256으로 고정합니다. author·committer와 변경 commit·현재 소스 트리를 검사하고 detector 출력은 폐기합니다. 원격 실행 및 branch protection의 필수 체크 활성화는 로컬 성공으로 대신하지 않습니다. 배포 및 첫 PR 준비는 [출시 준비](releasing.md)와 [기여 안내](../../CONTRIBUTING.md)를 확인합니다.
+검증 CI workflow는 pull_request·현재 기본 브랜치 codex-governance-v111/main push·수동 실행에 대응합니다. Actions는 commit SHA, Gitleaks는 버전·archive SHA256으로 고정합니다. author·committer와 변경 commit·현재 소스 트리를 검사하고 detector 출력은 폐기합니다. 원격 실행 및 branch protection의 필수 체크 활성화는 로컬 성공으로 대신하지 않습니다. 배포 및 첫 PR 준비는 [출시 준비](releasing.md)와 [기여 안내](../../CONTRIBUTING.md)를 확인합니다.
 
 ## 문서 갱신 기준
 
