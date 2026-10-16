@@ -33,3 +33,11 @@ bootstrap의 provenance, 실제 OIDC stage, 유지관리자2FA 승인과 게시 
 - 기존 정확한0.0.1 tarball의 --existing 검사 성공: SHA-256·files 전체/법적 증거/bytes·추출 Gitleaks·격리 npm 설치·SSR/API·타입 소비를 실제 수행. 새 artifact를 만들지 않음.
 - 로컬 build 출력은 분리 디렉터리에 두며 원래 작업 폴더의 dist에 쓰지 않음.
 - 실제 npm pack 분기와 GitHub upload/download/OIDC stage는 bootstrap 전에는 실행하지 않았으며 정적 구현·단위/기존 artifact 실행 검증과 구분함.
+
+## 공개 설치 안내 보완
+
+최종 공개 전 README·시작/API/지원/Playground 문서에서 현재 미배포·설치 불가라고 단정하던 문구를0.0.1 계약과 공개 버전 설치 안내로 바꿉니다. 공개 전 tarball 설치 경로는 보존하며 게시 완료를 미리 주장하지 않습니다. 국문 참조를 원본에서 재생성합니다. README의 버전 범위 heading에 맞춰 check-docs의 해당 문자열만 변경하며 나머지 검증은 유지합니다.
+
+이는 배포 문서 변경이므로 기존81파일 후보는 보존하고 새 최종 후보를 한 번 생성합니다. 기존 Chrome155 증거는 src/dist 런타임64파일의 byte동일성을 확인한 범위에서만 재사용합니다. 보안 검토한 게시 scripts/workflows4개와 security tests는 bf065017 고정본과 동일합니다.
+
+공개 설치 안내 보완 뒤에도 full verify(unit54/consumer6/type/build/license/docs42)와 security9가 통과했습니다. 보안 diff 검토는19a24db..bf065017의 primary4개이며 신규 보고 대상 취약점0건으로 완료했습니다. 최종 문서 checkout의 해당 scripts/workflows와 회귀 tests는 고정 검토본과 byte동일합니다. 변경한 docs checker는 버전 범위 heading 문자열만 대응하며 검사 범위를 줄이지 않았습니다.

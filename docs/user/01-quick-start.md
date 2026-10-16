@@ -2,11 +2,12 @@
 
 [한국어](../ko/01-quick-start.md) · [Documentation index](../README.md)
 
-Comins Capture 0.0.1 is an unpublished candidate. Use the reviewed tarball
-provided by the maintainer; registry installation is not available yet.
+For the registry release, install the exact 0.0.1 version. Before that version
+appears on npm, install the reviewed tarball supplied by the maintainer.
 
 ```sh
-npm install --ignore-scripts ./comins-capture-0.0.1.tgz
+npm install --ignore-scripts comins-capture@0.0.1
+# Offline candidate: npm install --ignore-scripts ./comins-capture-0.0.1.tgz
 ```
 
 Use Node.js 24 or later and ESM. A browser bundler must resolve the package

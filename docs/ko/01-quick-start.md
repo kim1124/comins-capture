@@ -4,7 +4,7 @@
 
 # 시작하기
 
-현재0.0.1은 `private:false`·npm 미배포 로컬 후보입니다. 공개용 메타데이터 전환은 실제 게시를 의미하지 않습니다. Node.js 24 이상과 npm이 필요합니다. [지원 상태](08-browser-support.md)의 Chrome 검증 범위와 남은 공개 배포 조건를 먼저 확인하십시오.
+0.0.1의 정적 HTML·단일 출력 계약을 설명합니다. Node.js 24 이상과 npm이 필요합니다. [지원 상태](08-browser-support.md)의 실제 Chrome 검증 범위와 제한을 먼저 확인하십시오.
 
 ## 저장소에서 실행
 
@@ -31,12 +31,13 @@ HTML을 file URL로 직접 여는 대신 개발 서버를 사용합니다.
 
 프레임워크 예제는 `npm run test:frameworks`로 실제 tarball 설치본을 구성합니다. [브라우저 소비 재현](03-frameworks.md)의 후속 절차가 필요합니다.
 
-## 별도 애플리케이션에 로컬 후보 설치
+## 별도 애플리케이션에 설치
 
-유지관리자가 전달한 tarball을 소비 프로젝트에 복사한 뒤, 그 프로젝트 루트에서 실제 파일 경로로 설치합니다. 아래 예시는 tarball을 소비 프로젝트 루트에 둔 경우입니다.
+공개 registry에서 해당 버전이 확인되면 소비 애플리케이션에 정확한 버전을 설치합니다. 공개 전이거나 오프라인 후보를 확인하는 경우에는 유지관리자가 전달한 tarball의 실제 경로를 사용합니다.
 
 ```sh
-npm install --ignore-scripts ./comins-capture-0.0.1.tgz
+npm install --ignore-scripts comins-capture@0.0.1
+# 오프라인 후보: npm install --ignore-scripts ./comins-capture-0.0.1.tgz
 ```
 
 ESM 패키지의 `comins-capture` 루트에서만 import합니다. 브라우저용 bundler가 이 import를 처리해야 합니다. native script에서 bare import를 바로 사용하지 않으며 저장소 Playground는 자체 import map을 제공합니다. 별도 framework adapter 패키지는 없습니다.

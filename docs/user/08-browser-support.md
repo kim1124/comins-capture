@@ -2,7 +2,7 @@
 
 [한국어](../ko/08-browser-support.md) · [Documentation index](../README.md)
 
-0.0.1 remains unpublished. Implementation, bounded browser evidence and public
+This document covers the 0.0.1 runtime. Implementation, bounded browser evidence and public
 release closure are separate states. Chrome technical quality is conditionally
 accepted for the supported static, single-output scope.
 
