@@ -2,11 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import ts from 'typescript';
+import {runInNewContext} from 'node:vm';
 const supply=await import('../../scripts/engine-supply.mjs').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e;});
 const required=()=>assert.equal(typeof supply.createEngineSupply,'function');
 const root=new URL('../../',import.meta.url);
 const original=await readFile(new URL('node_modules/@zumer/snapdom/dist/snapdom.mjs',root),'utf8');
 const license=await readFile(new URL('node_modules/@zumer/snapdom/LICENSE',root),'utf8');
+test('restricted engine never inspects or replaces material icon nodes',async()=>{
+ const {code}=supply.createEngineSupply(original,license,'3.2.0');
+ const file=ts.createSourceFile('engine.js',code,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
+ const replacement=file.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='Nn');
+ assert.ok(replacement);
+ const replaceIcons=runInNewContext('('+replacement.getText(file)+')');
+ const input=new Proxy({},{get(){throw Error('Stock icon path accessed DOM');}});
+ assert.equal(await replaceIcons(input,input),0);
+});
 test('engine supply is deterministic and rejects changed upstream or license inputs',()=>{
  required();const a=supply.createEngineSupply(original,license,'3.2.0'),b=supply.createEngineSupply(original,license,'3.2.0');
  assert.deepEqual(a,b);

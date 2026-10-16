@@ -12,6 +12,15 @@ export interface ExtensionSession {
   assertComplete(): void;
   dispose(): void;
 }
+function preparedImageData(value:string):boolean {
+  const prefix=/^data:image\/(?:png|jpeg|webp);base64,/.exec(value);
+  if(!prefix)return false;
+  const body=value.slice(prefix[0].length);
+  // A repeated four-character group can exhaust browser regex stacks on valid large PNGs.
+  const padding=body.endsWith('==')?2:body.endsWith('=')?1:0;
+  const data=body.slice(0,body.length-padding);
+  return body.length%4===0&&data.length>0&&!/[^A-Za-z0-9+/]/.test(data);
+}
 export function createExtensionSession(bindings: ExtensionBindings, context: OperationContext): ExtensionSession {
   const images=new Map<string,string>();
   let clone: ExtensionBindings['cloneShallow'] | undefined=bindings.cloneShallow;
@@ -28,7 +37,7 @@ export function createExtensionSession(bindings: ExtensionBindings, context: Ope
     if(typeof clone!=='function')throw Error();
     for(const entry of bindings.images) {
       if(typeof entry.url!=='string'||!entry.url||images.has(entry.url)||typeof entry.dataUrl!=='string'||
-        !/^data:image\/(?:png|jpeg|webp);base64,(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(entry.dataUrl)||entry.dataUrl.endsWith(','))throw Error();
+        !preparedImageData(entry.dataUrl))throw Error();
       images.set(entry.url,entry.dataUrl);
     }
   }catch{images.clear();fail('RESOURCE_UNVERIFIABLE');}

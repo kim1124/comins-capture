@@ -39,9 +39,14 @@ test('cancel and disposal block later hooks; raw callback failures are sanitized
  assert.throws(()=>e.assertComplete(),{code:'ENGINE_FAILED'});
 });
 test('invalid or ambiguous prepared image entries reject at session construction',()=>{
- required();for(const images of [[{url:'a',dataUrl:'https://fixture.invalid/a'}],[{url:'a',dataUrl:'data:image/svg+xml;base64,AAAA'}],[{url:'a',dataUrl:'data:image/png;base64,'}],[{url:'a',dataUrl:png},{url:'a',dataUrl:png}]]) {
+ required();for(const images of [[{url:'a',dataUrl:'https://fixture.invalid/a'}],[{url:'a',dataUrl:'data:image/svg+xml;base64,AAAA'}],[{url:'a',dataUrl:'data:image/png;base64,'}],...[ 'A','AAA','AAAA=','AA=A','AAAA\n','AAA\n','AA=\n','AAA\r','AAA\u2028','AAA\u2029','AA==AAAA'].map(body=>[{url:'a',dataUrl:'data:image/png;base64,'+body}]),[{url:'a',dataUrl:png},{url:'a',dataUrl:png}]]) {
   assert.throws(()=>runtime.createExtensionSession({images,cloneShallow:detached},context()),{code:'RESOURCE_UNVERIFIABLE'});
  }
+});
+test('large prepared data URLs validate without repeated-group stack limits',async()=>{
+ required();const dataUrl='data:image/png;base64,'+'AAAA'.repeat(1_000_000);
+ const session=runtime.createExtensionSession({images:[{url:'large',dataUrl}],cloneShallow:detached},context());
+ assert.equal((await session.resolveImage('large')).data,dataUrl);session.dispose();
 });
 test('generated bundle hooks require an explicit session and retain normal prepared lookup',async()=>{
  required();assert.throws(()=>runtime.shallowClone({},{}),{code:'ENGINE_FAILED'});

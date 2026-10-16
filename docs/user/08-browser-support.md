@@ -8,24 +8,31 @@ accepted for the supported static, single-output scope.
 
 ## Measured candidate
 
-The 2026-10-15 packed development runtime was checked in actual Chrome
-154.0.8037.98 on macOS at DPR 2. Installed Chrome 155 metadata is not runtime
-evidence. Results cover authored fixtures, not arbitrary pages.
+The reviewed runtime was checked on 2026-10-16 in actual Chrome 155.0.8059.80,
+headless on macOS at DPR 2. This is a fresh run after the engine boundary fixes;
+the older Chrome 154 result is historical. Results cover authored fixtures,
+not arbitrary pages.
 
 | Check | Recorded result |
 | --- | --- |
 | Single-output/lifecycle/errors | 15/15 passed |
 | Resources/SVG | 15/15 passed |
+| Engine boundaries | 6/6 passed; no implicit icon-font acquisition; large PNG and downscaled PNG/JPEG |
 | 30 sequential statement captures | 0 failures; one PNG hash; no unreleased Blob URLs or DOM growth |
-| Simple 5-node capture → PNG | 10 samples; p50 23.8 ms; p95 26.2 ms |
-| Statement 64-node capture → PNG | 10 samples; p50 183.6 ms; p95 198.9 ms |
-| Dense 145-node capture → PNG | 10 samples; p50 306.7 ms; p95 438.0 ms |
+| Simple 5-node capture → PNG | 10 samples; p50 16.6 ms; p95 18.1 ms |
+| Statement 64-node capture → PNG | 10 samples; p50 42.2 ms; p95 47.3 ms |
+| Dense 145-node capture → PNG | 10 samples; p50 71.0 ms; p95 76.2 ms |
 
 p95 uses nearest-rank across these ten samples; it is not a production traffic
 percentile. Source/default/2×/custom/A4/JIS B4/SVG comparisons found no visible
 layout damage within this fixture. Exact full-image pixel equality is not a
-release claim. The four-framework check used Chrome UA 154 without an exact
-patch identification; it is a separate recorded run.
+release claim. These timings are a single-machine sample with no latency SLA
+and are not directly comparable to the older browser/runtime measurement.
+
+The reviewed runtime also passed a fresh four-framework browser run in the same
+Chrome version: Vanilla, React StrictMode, Vue and Svelte output, disposal,
+URL revocation, pending unmount cancellation and remounting. Public types and
+DOM-free React/Vue/Svelte server rendering passed separately.
 
 ## Dimensions and release boundary
 

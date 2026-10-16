@@ -2,6 +2,16 @@
 
 2026-10-16 문서 갱신 기준. 패키지는 `private:false`, `0.0.1`, 미배포입니다. 정리 완료와 출시 수용 완료를 구분합니다.
 
+## 2026-10-16 리뷰 수정 후 최신 검증
+
+Material Symbols의 엔진 자체 폰트 로딩을 제거하고 준비 이미지 재압축을 비활성화했습니다. 대용량 Base64의 반복 그룹 검사에서 발생한 Chrome 스택 초과도 수정했습니다. 변경한 런타임에 과거 byte동일 조건의 검증 결과를 재사용하지 않습니다.
+
+실제 Chrome 155.0.8059.80(headless·macOS·DPR2)에서 기능15/15·자원/SVG15/15·엔진 회귀6/6을 새로 통과했습니다. 엔진 회귀는 기본 deny에서 아이콘 폰트 요청0건, 약3.44MB PNG와 축소 PNG/JPEG 이미지·배경을 포함합니다. 반복30회 실패0·PNG 해시1종·미해제 URL0·DOM 증가0이며 전체 verify는 unit54·consumer6·타입·빌드·라이선스·문서 통과입니다.
+
+10표본 capture→PNG의 p50/p95는 단순5노드16.6/18.1ms, 명세서64노드42.2/47.3ms, 표145노드71.0/76.2ms입니다. 단일 기기 headless 측정이며 SLA나 과거 Chrome154 대비 개선율을 뜻하지 않습니다. 원본·기본·2배·custom·A4·JIS B4 화면 대조에서 텍스트·색·그림자·clip의 눈에 띄는 손상은 관찰하지 않았습니다. SVG mm·Canvas/PNG 일관성도 통과했습니다. 아래 항목은 이전 후보의 역사로 보존합니다. Safari·기타 브라우저 지원과 게시 승인은 계속 별도입니다.
+
+동일한 Chrome155에서 Vanilla·React StrictMode·Vue·Svelte의 출력·dispose·URL revoke·진행 중 언마운트 취소·재마운트4/4를 새로 통과했습니다. 별도 공개 타입·DOM 없는 React/Vue/Svelte SSR·소비 bundle 검사도 통과했습니다.
+
 ## 0.0.1 범위
 
 연결된 정적 HTMLElement의 단일 PNG/JPEG·Canvas·foreignObject SVG와 네이티브 지원 시 WebP를 제공합니다. 배율·사용자 크기·ISO/JIS 용지·방향·여백·fit·align·배경을 유지합니다. 자원 준비·SVG 검증 불충족은 오류로 종료합니다.

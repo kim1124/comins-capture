@@ -11,7 +11,8 @@ export function createDomAdapter(prepared:PreparedDom):EngineAdapter {
       // A literal specifier lets consumer bundlers include the fixed engine chunk.
       const {snapdom}=await import('./vendor/snapdom.mjs');
       const session=prepared.session;
-      const result=await snapdom(source,{cache:false,invalidate:true,embedFonts:false,dpr:1,scale:1,reconcile:false,
+      // Preserve the exact prepared resource bytes expected by SVG verification.
+      const result=await snapdom(source,{cache:false,invalidate:true,embedFonts:false,compress:false,dpr:1,scale:1,reconcile:false,
         plugins:[{name:'comins-prepared-dom',needs:'render',
           beforeClone(ctx){(ctx as unknown as {__comins:typeof session}).__comins=session;session.assertComplete();},
           resolveNode(node){

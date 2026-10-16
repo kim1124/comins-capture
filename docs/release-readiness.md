@@ -4,6 +4,8 @@
 
 ## 0.0.1 제품 범위
 
+최신 리뷰 수정 후 검증은 [2026-10-16 리뷰 기록](worklogs/2026-10-16-pr-review-fixes.md)을 우선합니다. Chrome155에서 기능15·자원/SVG15·엔진 회귀6·프레임워크4·반복30회를 새로 확인했으며 과거 Chrome154 런타임 동일성 주장은 이 수정 후보에 적용하지 않습니다. 원격 병합과 게시 승인은 구분합니다.
+
 - 연결된 정적 HTMLElement의 단일 PNG/JPEG·Canvas·foreignObject SVG. WebP는 네이티브 요청 MIME 지원 시 제공하며 미지원은 FORMAT_UNSUPPORTED입니다.
 - 기본 CSS 1배·scale·device DPR·custom pixels, ISO/JIS A3/A4/A5/B3/B4/B5, orientation·margin·fit·align·background. 용지는 래스터 기본 300 PPI, SVG mm입니다.
 - capture, snapshot toBlob/toCanvas/toSvg/meta/dispose, paperSize, CaptureError와 관련 타입만 공개합니다.

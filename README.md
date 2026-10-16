@@ -126,9 +126,10 @@ defaults and clears results. `node examples/geometry.mjs` runs without a DOM.
 
 The initial release focuses on static HTML, single output, scale, custom sizes
 and ISO/JIS paper. Unfinished crop, tile and partial paths have been removed.
-Actual Chrome 154.0.8037.98 on macOS/DPR2 passed 15 single-output/lifecycle/error
-and 15 resource/SVG checks on the benchmark runtime. The 64-node statement's
-capture-to-PNG measured p50 183.6 ms and p95 198.9 ms across 10 samples; 30
+Actual Chrome 155.0.8059.80 (headless, macOS/DPR2) passed 15 single-output/lifecycle/error
+and 15 resource/SVG checks on the reviewed runtime. Six engine regressions also
+passed, including zero implicit icon-font requests and large/downscaled images.
+The 64-node statement's capture-to-PNG measured p50 42.2 ms and p95 47.3 ms across 10 samples; 30
 sequential captures had zero failures. Paper dimensions passed 24 ISO/JIS and
 orientation cases, with JIS values corroborated from public supplier/manufacturer
 tables. JISC login is not required for this dimension check.
@@ -142,7 +143,7 @@ See [browser evidence and limits](docs/user/08-browser-support.md).
 Chrome technical quality is conditionally accepted for the measured static
 scope. Native Safari is excluded because known shadow/clip failures remain.
 Edge, Firefox and physical mobile devices are unverified for this candidate.
-Installed Chrome 155 metadata and WebKit tests do not establish native runtime
+Installed browser metadata and WebKit tests do not establish native runtime
 support. Broad CSS, low-end systems, long-duration memory and full-image pixel
 equality are not guaranteed. Canvas is limited to 8192 px per side and
 32,000,000 px total.

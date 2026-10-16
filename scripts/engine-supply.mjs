@@ -18,18 +18,20 @@ export function createEngineSupply(original,license,version) {
       if(name==='Qt')updated=replace(source,'t.cloneNode(!1)','__cominsShallow(t,n)',3);
       if(name==='xe')updated=replace(source,'if(L.background.has(s))','{let a=await __cominsRead(o,e);return `url("${a.data}")`}if(L.background.has(s))',1);
       if(name==='We')updated=replace(source,'await dt(Vt(U),{as:"dataURL",useProxy:r.useProxy})','await __cominsRead(Vt(U),r)',1);
+      // Keep prepared text/fonts intact; stock icon rasterization loads its own font.
+      if(name==='Nn')updated='async function Nn(){return 0}';
       if(updated!==source)edits.push({start:node.getStart(file),end:node.end,updated,name});
     }
     ts.forEachChild(node,visit);
   }
   visit(file);
-  if(edits.length!==3)throw Error('ENGINE_PATCH_CHANGED');
+  if(edits.length!==4)throw Error('ENGINE_PATCH_CHANGED');
   let code=original;
   for(const e of edits.sort((a,b)=>b.start-a.start))code=code.slice(0,e.start)+e.updated+code.slice(e.end);
   code='// Comins modified SnapDOM 3.2.0. See LICENSE and provenance.json.\nimport {shallowClone as __cominsShallow,resolveImage as __cominsRead} from "../snapdom-extension.js";\n'+code;
   return {code,license,provenance:{component:'@zumer/snapdom',version,source:'https://registry.npmjs.org/@zumer/snapdom/-/snapdom-3.2.0.tgz',license:'MIT',
-    use:'Modified internal engine component behind the restricted static DOM public capture API.',modifiedFunctions:['Qt','We','xe'],
-    modifications:['Three shallow clone sites use a call-owned factory.','CSS background/mask and pseudo content image lookup uses a call-owned prepared resource session.','No stock fallback at these patched lookup sites; other original acquisition paths are not yet controlled.'],
+    use:'Modified internal engine component behind the restricted static DOM public capture API.',modifiedFunctions:['Qt','We','xe','Nn'],
+    modifications:['Three shallow clone sites use a call-owned factory.','CSS background/mask and pseudo content image lookup uses a call-owned prepared resource session.','Material icon rasterization is disabled to preserve prepared text and prevent implicit font acquisition.','No stock fallback at these patched lookup sites; other original acquisition paths require adapter restrictions and verification.'],
     originalSHA256:upstreamHash,licenseSHA256:licenseHash,candidateSHA256:digest(code),obligations:'Preserve the upstream copyright and permission notice with the distributed copy.'}};
 }
 
