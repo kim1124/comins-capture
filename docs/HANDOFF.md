@@ -4,7 +4,7 @@
 
 ## 최신 원격 상태
 
-2026-10-16 `comins-capture@0.0.1`을 실제 게시했습니다. 계정·캐시 없는 npm 조회에서 정확한 버전과 latest를 확인했고, 공개 tarball의 SHA-256·integrity가 최종 후보와 일치했습니다. 공개 artifact gate·정확한 registry 버전 격리 설치·API 소비·registry 서명 검증과 실제 게시자 신원 workflow38860004476이 성공했습니다. stage 전용 trusted publisher 생성과 게시2FA 강제·토큰 우회 차단 설정 명령이 성공했습니다. 최종 인증 뒤 실제 조회에서도 repo kim1124/comins-capture·file publish.yml·environment npm·stage publish 전용 권한을 확인했습니다. bootstrap 버전의 provenance 부재는 유지관리자가0.0.1·고정 SHA-256에 한해 예외 승인했습니다. 게시 후 운영 검증은 완료했으며 지원 버전·종료 기록의 원격 반영은 별도 Git 승인 단계입니다. [최초 게시 통제 기록](worklogs/2026-10-16-publication-controls.md)의 최신 확인을 우선합니다. 원격 문서 마감 전에는 published, not closed로 유지합니다.
+2026-10-16 `comins-capture@0.0.1`을 실제 게시했습니다. 계정·캐시 없는 npm 조회에서 정확한 버전과 latest를 확인했고, 공개 tarball의 SHA-256·integrity가 최종 후보와 일치했습니다. 공개 artifact gate·정확한 registry 버전 격리 설치·API 소비·registry 서명 검증과 실제 게시자 신원 workflow38860004476이 성공했습니다. stage 전용 trusted publisher 생성과 게시2FA 강제·토큰 우회 차단 설정 명령이 성공했습니다. 최종 인증 뒤 실제 조회에서도 repo kim1124/comins-capture·file publish.yml·environment npm·stage publish 전용 권한을 확인했습니다. bootstrap 버전의 provenance 부재는 유지관리자가0.0.1·고정 SHA-256에 한해 예외 승인했습니다. 게시 후 운영 검증은 완료했으며 지원 버전·종료 기록의 최종 Git 마감은 [PR #4](https://github.com/kim1124/comins-capture/pull/4)의 병합 상태와 필수 CI를 함께 확인합니다. [최초 게시 통제 기록](worklogs/2026-10-16-publication-controls.md)의 최신 확인을 우선합니다. 아래 과거의 published, not closed 판정은 각 기록 시점의 상태입니다.
 
 2026-10-16 PR #3의 릴리스 통제와 공개 설치 문서 보완을 6c161e3로 보호 병합했습니다. PR/merge CI·실제 기대 신원 workflow가 성공했고 npm Environment를 보호된 브랜치로 제한했습니다. 새 최종 후보81파일(cdfc63775504…)을 별도로 검증했고 이전 후보는 보존합니다. 현재 정확한 새 tarball의 최초 게시 웹2FA를 대기 중이며 아직 게시 성공이 아닙니다. [최초 게시 통제 기록](worklogs/2026-10-16-publication-controls.md)을 최신 상태로 우선합니다. 이전 게시 보류·후보 불변 설명은 당시 시점의 기록입니다.
 

@@ -85,3 +85,9 @@ SHA-256: cdfc63775504db04ee976f3593fd432b2a5059e754eaeb45b31d5e0fe1ff0acd
 정확한 공개0.0.1·latest·integrity·서명2개·후보 SHA-256 불변을 다시 확인했습니다. 실제 bootstrap-version identity workflow38860004476은 보호 병합6c161e3985a8be9fa11317f4e25bde0a26ee245c에서 성공 상태입니다. 게시2FA 강제·토큰 우회 차단은 공식 mfa=publish 설정의 성공 결과를 근거로 하며, 후속 OIDC stage 실행은 아직 미실행입니다. provenance는 없고 정확한 최초 게시 artifact에 대한 유지관리자 예외 승인으로 처리합니다.
 
 운영 확인 항목은 완료했습니다. 공개 SECURITY.md의 미게시 지원 문구와 원격 인계·출시 상태를 실제 게시 결과에 맞추는 문서 마감을 준비합니다. 대상은 SECURITY.md·docs/HANDOFF.md·docs/release-readiness.md와 인계에서 참조하는 운영 worklog4개입니다. 제품·패키지·workflow·의존성·README·공통 정책은 변경하지 않습니다. 원격 push·PR·보호 병합은 별도 명시 승인 대상이므로 검토 가능한 로컬 커밋을 준비한 뒤 승인받습니다. 원격 문서 마감 전에는 published, not closed로 유지합니다.
+
+## 원격 문서 마감
+
+유지관리자가 준비된 문서 마감 커밋의 원격 push·PR·필수CI·보호 병합 진행을 승인했습니다. [PR #4](https://github.com/kim1124/comins-capture/pull/4)에 지원 정책·인계·출시 상태·운영 기록7개를 반영합니다. 이전 published, not closed 판정은 각 기록 시점의 상태이며 실제 최종 Git 반영은 해당 PR의 병합 및 CI 결과를 함께 확인합니다. 제품·패키지·workflow·의존성과 고정0.0.1 tarball은 그대로입니다.
+
+격리 checkout의 첫 Git 신원 검사는 기본 설정을 거부하여 커밋 전에 중단했습니다. 승인된 기존 공개 소스 커밋의 handle·noreply 신원을 해당 격리 checkout에만 설정한 뒤 신원 검사와 hook을 통과했습니다. 사용자 기본 설정과 기존 작업 파일은 변경하지 않았고 원시 신원 값은 이 기록에 남기지 않습니다.
