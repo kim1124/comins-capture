@@ -4,7 +4,19 @@
 
 ## 최신 원격 상태
 
-2026-10-16 최종 거버넌스 점검 후 SECURITY.md·bug/feature Issue Forms·신고/출시 안내를 보완했습니다. 후속 승인으로 PVR·dependency alerts 활성화와 재조회에 성공했고 열린 의존성 알림0건, 검증된 Comins 신원의 기대값 Secrets2개 저장을 확인했습니다. [거버넌스 보완 기록](worklogs/2026-10-16-governance-remediation.md)을 현재 상태로 우선합니다. npm 게시는 보류하며 기존81파일 후보를 보존합니다. 아래의 PR/원격 상태는 과거 작업 기록입니다.
+2026-10-16 `comins-capture@0.0.1`을 실제 게시했습니다. 계정·캐시 없는 npm 조회에서 정확한 버전과 latest를 확인했고, 공개 tarball의 SHA-256·integrity가 최종 후보와 일치했습니다. 공개 artifact gate·정확한 registry 버전 격리 설치·API 소비·registry 서명 검증과 실제 게시자 신원 workflow38860004476이 성공했습니다. stage 전용 trusted publisher 생성과 게시2FA 강제·토큰 우회 차단 설정 명령이 성공했습니다. 최종 인증 뒤 실제 조회에서도 repo kim1124/comins-capture·file publish.yml·environment npm·stage publish 전용 권한을 확인했습니다. bootstrap 버전의 provenance 부재는 유지관리자가0.0.1·고정 SHA-256에 한해 예외 승인했습니다. 게시 후 운영 검증은 완료했으며 지원 버전·종료 기록의 최종 Git 마감은 [PR #4](https://github.com/kim1124/comins-capture/pull/4)의 병합 상태와 필수 CI를 함께 확인합니다. [최초 게시 통제 기록](worklogs/2026-10-16-publication-controls.md)의 최신 확인을 우선합니다. 아래 과거의 published, not closed 판정은 각 기록 시점의 상태입니다.
+
+2026-10-16 PR #3의 릴리스 통제와 공개 설치 문서 보완을 6c161e3로 보호 병합했습니다. PR/merge CI·실제 기대 신원 workflow가 성공했고 npm Environment를 보호된 브랜치로 제한했습니다. 새 최종 후보81파일(cdfc63775504…)을 별도로 검증했고 이전 후보는 보존합니다. 현재 정확한 새 tarball의 최초 게시 웹2FA를 대기 중이며 아직 게시 성공이 아닙니다. [최초 게시 통제 기록](worklogs/2026-10-16-publication-controls.md)을 최신 상태로 우선합니다. 이전 게시 보류·후보 불변 설명은 당시 시점의 기록입니다.
+
+2026-10-16 [PR #2](https://github.com/kim1124/comins-capture/pull/2)의 보안 정책·요청 양식·출시 안내 보완을 19a24db로 보호 병합했습니다. PR CI38855304620·병합 후 CI38855390737에서 Sensitive data·Package가 모두 성공했습니다. PVR·dependency alerts 활성·열린 의존성/secret 알림0건·기대 신원 Secrets2개를 확인하고 기본 브랜치 문서8개의 실제 bytes를 재확인했습니다. [원격 반영 확인](worklogs/2026-10-16-governance-remote-closure.md)을 최신 상태로 우선합니다. 기존81파일 후보는 불변이고 npm 게시는 보류입니다. 로컬 기본 브랜치도 같은 merge HEAD로 맞췄으며 기존 사용자 작업 파일은 보존했습니다.
+
+2026-10-16 유지관리자의 후속 승인에 따라 PVR·dependency alerts를 활성화하고 실제 재조회에 성공했습니다. 열린 의존성 알림0건이며 검증된 Comins 서비스 신원의 기대값 Secrets2개 저장·생성 메타데이터 확인을 완료했습니다. 보안 정책·Issue Forms의 PR·필수 CI·보호 병합을 진행하며 정확한 결과는 [보완 기록](worklogs/2026-10-16-governance-remediation.md)을 따릅니다. npm 게시 보류와 기존81파일 후보는 유지합니다. 아래 원격 쓰기 거부 설명은 후속 승인 전의 경과입니다.
+
+2026-10-16 최종 점검에서 보안 정책·Issue Forms 누락, PVR 비활성, 기대 npm 신원 Secrets 누락과 dependency alerts API403을 확인하여 게시를 보류했습니다. 후속 보완에서 SECURITY.md·Issue Forms·신고 안내·출시 문서를 로컬에 작성했습니다. 원격 보안 설정·Secrets 저장은 자동 승인 검토가 구체적인 승인 부족으로 거부하여 실행하지 않았습니다. 최신 판정은 [거버넌스 보완 기록](worklogs/2026-10-16-governance-remediation.md)을 따릅니다. npm 인증은 완료되었으나 게시 승인은 보류 상태이며, 아래 인증 대기 설명은 이전 시점의 기록입니다. 기존 tarball은 보존합니다.
+
+2026-10-16 최초 npm 게시 사전 확인에서 기존81파일 후보의 바이트·해시·게시 dry-run·license gate를 통과했습니다. registry404로 미게시 상태를 재확인했으나 계정 조회가 E401로 거부되어 공식 웹 인증을 대기 중입니다. 유지관리자는 아이패드에서 로그인·2FA를 진행하며 비밀번호·OTP·토큰을 채팅으로 받지 않습니다. [게시 사전 확인](worklogs/2026-10-16-publication-preflight.md)을 따르고 인증·공개 서비스 신원 확인 전에는 게시하지 않습니다. 제품 소스와 고정 tarball은 변경하지 않았습니다.
+
+2026-10-16 11:54 KST PR #1을 실제 병합했습니다. 기본·로컬 브랜치는 a8278d4이며 검토한 head4103bed와 소스 tree가 같습니다. 최신 head의 PR CI38842671111과 병합 후 push CI38842796042에서 Sensitive data·Package가 모두 성공했습니다. 필수 검사·앱 ID15368·strict·관리자 보호를 유지했습니다. [보호 병합 결과](worklogs/2026-10-16-protected-merge.md)를 현재 상태로 우선합니다. 이 후속 운영 기록은 로컬 미커밋이며 npm 게시·태그·Release·사이트 배포는 수행하지 않았습니다.
 
 2026-10-16 PR 리뷰에서 엔진 자체 폰트 요청·이미지 압축·큰 PNG 준비 실패를 재현하고 수정했습니다. 최신 검증은 [리뷰 수정 기록](worklogs/2026-10-16-pr-review-fixes.md)과 지원 가이드의 Chrome155 결과를 우선합니다. 과거 Chrome154 byte동일 재사용 조건은 이번 변경에 적용하지 않습니다. 아래 PR 생성 기록은 이전 head의 상태이며 새 head CI와 보호 병합 결과는 후속 운영 기록을 따릅니다.
 

@@ -11,10 +11,10 @@ private DOM content from examples.
 
 ## Supported Versions
 
-Version `0.0.1` is an unpublished candidate. No published version is currently
-supported. Candidate reports are welcome. Before `1.0.0`, only the latest
-verified published version will receive security fixes; this policy must be
-updated after publication is verified.
+Version `0.0.1` is published and receives security reports and applicable fixes.
+Before `1.0.0`, only the latest verified published version receives security
+fixes. Publication and the remaining release closure checks are recorded
+separately in the repository's release evidence.
 
 ## System and Security Boundaries
 
