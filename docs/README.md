@@ -1,48 +1,80 @@
-# Comins Capture 문서
+# Comins Capture Documentation
 
-[Comins 웹사이트](https://comins-website.vercel.app/ko/) · [Capture 소개](https://comins-website.vercel.app/ko/capture/) · [사용 가이드](guide/README.md)
+This directory separates current user references from maintainer operations,
+historical implementation plans and dated verification records.
 
-현재 버전은0.0.1 로컬 후보이며 `private:true`·npm 미배포 상태입니다. 현재 구현 계약은 [사용 가이드](guide/README.md), 출시 판정은 [출시 조건](release-readiness.md)을 우선합니다. 과거 연구 문서의 기능 목록이나 성공 기록을 현재 지원 범위로 해석하지 않습니다.
+현재 사용자 참조 문서와 저장소 운영·과거 연구·시점별 검증 기록을 구분합니다.
 
-## 사용자를 위한 문서
+[Comins Brand](https://comins-website.vercel.app/ko/) ·
+[Capture introduction](https://comins-website.vercel.app/ko/capture/)
 
-| 목적 | 문서 | 확인할 예제·결과 |
-|---|---|---|
-| 설치·첫 캡처·파일 저장 | [시작하기](guide/getting-started.md) | 정적 card를 PNG로 만들고 저장·해제 |
-| 공개 함수·타입·오류·소유권 | [API](guide/api.md) | capture·snapshot·paperSize·CaptureError |
-| 형식·배율·용지·여백·fit | [출력 옵션](guide/output-options.md) | 기본·2배·800×600·A4·JIS B4 |
-| 정적 HTML·이미지·폰트 | [입력과 자원](guide/dom-integration.md) | same-origin 또는 Blob resolver·명시 오류 |
-| Vanilla·React·Vue·Svelte 소비 | [프레임워크](guide/frameworks.md) | 렌더 완료·언마운트 취소·URL 정리 |
-| 샘플 조작·저장·취소 | [Playground](guide/playground.md) | localhost6004의 형식·크기·배경·초기화 |
-| 오류 원인과 조치 | [문제 해결](guide/troubleshooting.md) | code/stage·최소 재현 자료 |
-| 실제 검증 환경·제한 | [지원 상태](guide/support.md) | 실제 Chrome·미지원 Safari·잔여 출시 조건 |
-| 엔진과 출력 경계 | [구조](guide/architecture.md) | 같은 검증 SVG에서 단일 출력 생성 |
+## 0.0.1 candidate status
 
-기능별 가이드에서 실제 예제와 검증 근거를 확인할 수 있습니다. Capture의 네 프레임워크는 같은 루트 API를 소비하며 별도 adapter export를 제공하지 않습니다. 웹사이트의 Capture 페이지는 개발 중 소개이고 현재0.0.1 API 원본은 이 저장소의 guide입니다.
+0.0.1 remains unpublished. Static connected HTMLElement capture, single
+PNG/JPEG/Canvas/foreignObject SVG, conditional native WebP and ISO/JIS paper
+presets are implemented. Chrome acceptance is bounded by recorded fixtures;
+native Safari remains excluded due to known shadow/clip failures.
 
-## 저장소 작업 문서
+JIS 치수는 공개 업체 자료와 ISO/JIS·방향별24조합 기하 검증으로 확인했습니다.
+JISC 로그인·원문 열람은 필수 조건이 아닙니다. 최종 artifact·소스 revision·
+원격 CI·게시 승인은 별도 확인 대상입니다.
 
-| 목적 | 문서 |
-|---|---|
-| 변경 요청·구현·기여 절차 | [기여 안내](../CONTRIBUTING.md) |
-| 디렉터리·명령·검증·증거 보존 | [저장소 안내](development/repository-guide.md) |
-| 최초 공개 후보와 승인·게시 후 확인 | [출시 준비](development/releasing.md) |
-| 현재0.0.1 범위와 수용 조건 | [출시 조건](release-readiness.md) |
-| 작업 재개 시 현재 상태 | [인계](HANDOFF.md) |
-| 제거 기능·차기 검토·복구 정보 | [차기 버전 memory](development/next-version-memory.md) |
-| 별도 website 문서 동기화 | [사이트 연동](guide/site-integration.md) |
+## User guides
 
-## 현재 품질 근거
+| English | 한국어 | Playground / API |
+| --- | --- | --- |
+| [01 Quick Start](user/01-quick-start.md) | [01 빠른 시작](ko/01-quick-start.md) | First PNG and download |
+| [02 Core Concepts](user/02-core-concepts.md) | [02 핵심 개념](ko/02-core-concepts.md) | Capture → snapshot → output |
+| [03 Framework Integration](user/03-frameworks.md) | [03 프레임워크 연동](ko/03-frameworks.md) | Vanilla / React / Vue / Svelte |
+| [04 Output Options](user/04-output-options.md) | [04 출력 옵션](ko/04-output-options.md) | Scale, custom, paper and fit |
+| [05 Input and Resources](user/05-resources.md) | [05 입력과 자원](ko/05-resources.md) | Static input, images and fonts |
+| [06 Lifecycle and Errors](user/06-lifecycle-errors.md) | [06 수명주기와 오류](ko/06-lifecycle-errors.md) | Abort, dispose and typed errors |
+| [07 Playground](user/07-playground.md) | [07 Playground](ko/07-playground.md) | Generate / save / reset |
+| [08 Browser Support](user/08-browser-support.md) | [08 지원과 검증](ko/08-browser-support.md) | Evidence and limitations |
+| [09 Public API Reference](user/09-public-api.md) | [09 공개 API](ko/09-public-api.md) | capture / paperSize / CaptureError |
+| [10 Site Integration](user/10-site-integration.md) | [10 사이트 연동](ko/10-site-integration.md) | Separate website synchronization |
 
-- [코드 정리](worklogs/2026-10-15-initial-scope-cleanup.md): 최초 범위 확정과 미완성 코드 제거.
-- [벤치마크](worklogs/2026-10-15-0.0.1-benchmark.md): 실제 Chrome 기능·화면·성능·반복 안정성.
-- [후속 확인](worklogs/2026-10-15-release-followup.md): 알려진 런타임 취약점0건과 JIS 원문 접근 제한.
-- [로컬 후보 준비](worklogs/2026-10-15-0.0.1-candidate-preparation.md): 버전·패키지·라이선스·민감정보·오프라인 소비 검사.
+Run `npm run dev` and open <http://127.0.0.1:6004>. The Playground uses one
+public Core API; it has no framework-specific routes.
 
-worklog는 해당 시점·artifact의 기록입니다. 그 뒤 문서나 패키지가 바뀌면 이전 tarball을 현재 checkout 전체와 동일하다고 표시하지 않습니다. 원본 로그·화면·해시는 로컬 `output/`에 보존하며 Git/배포파일에 넣지 않습니다.
+`docs/guide` remains the implementation-contract source. `docs/user` provides
+English references; `docs/ko` is generated from the Korean source with numbered
+cross-links. After editing docs/guide, run `npm run docs:sync`.
+`npm run check:docs` verifies generated copies, links, examples and API facts.
+English reference changes must be reviewed against the same Korean contract.
 
-## 과거 연구·설계 자료
+## Maintainer documents
 
-[엔진 채택](engine-adoption.md), [연구](research.md), [과거 API 설계](api-spec.md), [엔진 후속 검토](conditional-adoption-followup.md), `docs/superpowers/`의 계획과 이전 worklog는 설계 배경 및 실패 재현 자료입니다. crop·타일·partial·Safari 보완 등 현재 제거되거나 이월된 항목을 포함합니다. 새 구현에 적용하기 전 현재 가이드와 대조합니다.
+These are checkout-only documents. Repository links become current when the
+reviewed source revision is pushed; local preparation is not remote publication.
 
-`docs/guide`만 사용자 가이드로 npm 패키지에 포함됩니다. 이 목차와 `docs/development`, worklog, 연구 문서는 저장소에서 사용합니다.
+- [Contribution guide](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/CONTRIBUTING.md).
+- [Repository guide](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/development/repository-guide.md).
+- [Release preparation](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/development/releasing.md).
+- [Release conditions](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/release-readiness.md).
+- [Handoff](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/HANDOFF.md).
+- [Next-version memory](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/development/next-version-memory.md).
+
+## Verification records
+
+- [Scope cleanup](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-15-initial-scope-cleanup.md).
+- [Chrome benchmark](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-15-0.0.1-benchmark.md).
+- [Runtime dependency follow-up](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-15-release-followup.md).
+- [Earlier local candidate](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-15-0.0.1-candidate-preparation.md).
+- [Git and CI preparation](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-15-sequential-preparation.md).
+- [Paper-dimension corroboration](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-16-paper-dimension-corroboration.md).
+- [Reference docs and next candidate](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/worklogs/2026-10-16-reference-docs-candidate.md).
+- [Preview provenance](assets/README.md).
+
+Worklogs describe their recorded time and artifact. Older tarballs do not
+contain later documentation. Raw local logs and captures stay in output and
+are excluded from Git and the package.
+
+## Historical records
+
+Engine adoption, earlier API designs, research and docs/superpowers are
+checkout-only historical decisions. They may include removed crop/tiles/partial
+APIs. Current references and exports take precedence.
+
+User references in guide/user/ko, this index and preview assets are packaged.
+Development documents, handoff, worklogs and research remain checkout-only.

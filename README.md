@@ -1,128 +1,164 @@
 # Comins Capture
 
-<a href="https://comins-website.vercel.app/ko/"><img src="https://comins-website.vercel.app/brand/comins-symbol.svg" width="64" height="64" alt="Comins 웹사이트" /></a>
+<a href="https://comins-website.vercel.app/ko/"><img src="https://comins-website.vercel.app/brand/comins-symbol.svg" width="64" height="64" alt="Comins brand website" /></a>
 
-[Comins 웹사이트](https://comins-website.vercel.app/ko/) · [Capture 소개](https://comins-website.vercel.app/ko/capture/) · [사용 가이드](docs/guide/README.md) · [공개 API](docs/guide/api.md)
+[Comins Brand](https://comins-website.vercel.app/ko/)
 
-브라우저에 연결된 정적 HTML 요소를 이미지·Canvas·foreignObject SVG로 출력하는 프레임워크 독립 모듈입니다. 하나의 TypeScript Core를 Vanilla JavaScript·React·Vue·Svelte에서 사용하며, 기본 크기·배율·사용자 크기와 ISO/JIS 용지 출력을 제공합니다.
+Browser-side static HTML capture for Vanilla JavaScript, React, Vue, and Svelte,
+built on one TypeScript core and a pinned SnapDOM engine. Capture a connected
+element once and export PNG, JPEG, Canvas, or foreignObject SVG at a requested
+scale, custom size, or ISO/JIS paper size. WebP requires native encoder support.
 
-**0.0.1 로컬 후보 · private:true · npm 미배포.** Comins 웹사이트의 Capture 소개는 개발 중 안내입니다. 현재 구현 계약은 이 저장소의 가이드를 기준으로 하며 공개 배포 준비 완료를 뜻하지 않습니다.
+[English docs](docs/README.md) · [한국어 가이드](docs/ko/01-quick-start.md)
+· [Capture website](https://comins-website.vercel.app/ko/capture/)
 
-## 주요 기능
+**0.0.1 candidate — not published to npm.** Use a maintainer-provided tarball.
+The Capture website is a development introduction; current contracts are in
+this repository's guides.
 
-| 기능 | Playground 또는 API에서 확인할 내용 |
+![PNG of the authored statement fixture including text, table, shadows and clipping](docs/assets/capture-statement.png)
+
+This is a real 620×560 PNG output from the 2026-10-15 Chrome benchmark,
+not a screenshot of the Playground. See [preview provenance](docs/assets/README.md)
+for its fixture, runtime and evidence limits.
+
+## Features
+
+| Capability | What to try in the Playground |
 | --- | --- |
-| 단일 이미지 출력 | PNG·JPEG·SVG를 선택하고 생성 결과를 저장합니다. WebP는 브라우저 네이티브 인코더 지원 시 제공합니다. |
-| 배율과 크기 | CSS 원본1배·2배·캡처 당시 DPR·사용자 지정 크기를 비교합니다. |
-| 용지 출력 | ISO/JIS A3·A4·A5·B3·B4·B5와 방향을 선택합니다. 래스터 기본300 PPI, SVG는mm입니다. |
-| 배치와 배경 | contain·cover·stretch·배경을 비교합니다. API에서는 여백·정렬·JPEG/WebP 품질을 지정합니다. |
-| 같은 snapshot 재사용 | 검증 SVG에서 PNG/JPEG/WebP·Canvas·SVG를 생성합니다. 출력마다 원본을 다시 캡처하지 않습니다. |
-| 자원과 수명주기 | 기본 네트워크 deny, 명시 허용·resolver, 취소·timeout·dispose를 사용합니다. |
+| Single output | Generate and save PNG, JPEG, foreignObject SVG, or native-supported WebP. |
+| Scale and custom size | Compare CSS 1×, 2×, captured device DPR and custom 800×600 output. |
+| ISO/JIS paper | Select A3/A4/A5/B3/B4/B5, orientation and margins. Raster defaults to 300 PPI; SVG uses mm. |
+| Layout and background | Compare contain, cover, stretch and backgrounds. APIs also expose alignment and encoder quality. |
+| Snapshot reuse | Export several formats from one validated SVG without recapturing the source. |
+| Resources and lifecycle | Use default-deny resources, explicit origins or a Blob resolver, cancellation, timeout and disposal. |
 
-일반 정적 HTML이 지원 대상입니다. crop·타일·부분 성공·전체 페이지·Shadow DOM·폼/스크롤 상태·PDF는 제공하지 않습니다. 미지원 입력·자원·포맷·한도 초과는 오류로 종료합니다. [입력과 자원 정책](docs/guide/dom-integration.md)을 확인하십시오.
+The target is ordinary static HTML. Crop, tiles, partial output, full-page capture,
+Shadow DOM, form/scroll state and PDF are outside 0.0.1. See
+[input and resources](docs/user/05-resources.md).
 
-## 설치
+## Installation
 
-현재 공개 registry 설치는 제공하지 않습니다. 유지관리자가 전달한 tarball을 소비 프로젝트에 복사한 뒤 설치합니다.
+Registry installation is not available yet. Copy the reviewed candidate tarball
+into the consuming application and install it there:
 
 ```sh
 npm install --ignore-scripts ./comins-capture-0.0.1.tgz
 ```
 
-Node.js 24 이상과 ESM을 사용합니다. 브라우저용 bundler 또는 import map이 패키지 루트 import를 처리해야 합니다. 프레임워크별 별도 adapter 패키지나 deep import는 제공하지 않습니다. [설치 및 첫 캡처](docs/guide/getting-started.md)에 전체 예제가 있습니다.
+Use Node.js 24 or later and ESM. A browser bundler or application-owned import
+map must resolve the package root. There are no framework subpath packages or
+framework peer dependencies. Your application supplies its framework runtime.
 
-## 빠른 시작
+## Quick Start
 
-렌더와 자원 준비가 끝난 클라이언트 이벤트에서 실행합니다. 버튼·입력·다운로드 링크는 캡처 대상 밖에 둡니다.
+Call capture after the target has rendered. Keep controls outside the target.
 
 ```js
 import {capture} from 'comins-capture';
 
 const target = document.querySelector('#card');
-if (!(target instanceof HTMLElement)) throw new Error('캡처 대상을 확인하십시오.');
+if (!(target instanceof HTMLElement)) throw new Error('Missing capture target');
 const snapshot = await capture(target);
 try {
   const {value: blob, meta} = await snapshot.toBlob({
-    format: 'png',
-    size: {kind: 'paper', name: 'A4', ppi: 300},
-    background: '#fff',
+    format:'png',
+    size:{kind:'paper', name:'A4', ppi:300},
+    background:'#fff',
   });
-  // blob과 실제 출력 크기 meta.width/meta.height를 사용합니다.
+  // Use blob and meta.width/meta.height; A4 is 2480×3508 px at 300 PPI.
 } finally {
   snapshot.dispose();
 }
 ```
 
-`toBlob()` 반환값은 `{value, meta}`입니다. 앱이 만든 Blob URL은 앱에서 해제해야 합니다. 이미지·웹 폰트가 있으면 resolver 또는 허용 출처가 필요할 수 있습니다. [파일 저장·해제 예제](docs/guide/getting-started.md)와 [자원 정책](docs/guide/dom-integration.md)을 따르십시오.
+`toBlob()` returns `{value, meta}`. Applications own and revoke the Blob URLs
+they create. Images and web fonts may require a resolver or explicit origin
+policy. The [complete quick start](docs/user/01-quick-start.md) includes HTML,
+download handling and cleanup.
 
-## 프레임워크 선택
+## Choose a framework
 
-| 환경 | 렌더와 정리 시점 | 가이드 |
+| Framework | Readiness and ownership | Guide |
 | --- | --- | --- |
-| Vanilla JavaScript | 연결된 HTMLElement를 전달하고 화면 해제 때 취소·정리 | [Vanilla](docs/guide/frameworks.md#vanilla-javascript) |
-| React | ref·사용자 이벤트·effect cleanup, StrictMode setup마다 새 session | [React](docs/guide/frameworks.md#react) |
-| Vue | ref·nextTick·onUnmounted | [Vue](docs/guide/frameworks.md#vue) |
-| Svelte | bind:this·tick·onDestroy | [Svelte](docs/guide/frameworks.md#svelte) |
+| Vanilla JavaScript | Connected HTMLElement and application cleanup | [Vanilla](docs/user/03-frameworks.md#vanilla-javascript) |
+| React | ref, user event, effect cleanup; fresh owner per StrictMode setup | [React](docs/user/03-frameworks.md#react) |
+| Vue | ref, nextTick and onUnmounted | [Vue](docs/user/03-frameworks.md#vue) |
+| Svelte | bind:this, tick and onDestroy | [Svelte](docs/user/03-frameworks.md#svelte) |
 
-모든 환경에서 같은 `capture`를 사용합니다. 패키지 import와 용지 계산은 DOM 없이 가능하지만 캡처 자체는 클라이언트 전용입니다. 소비 예제의 session helper는 애플리케이션 코드이며 제품 export가 아닙니다.
+All frameworks import from `comins-capture`. Root import and paper calculation
+are DOM-free; capture itself requires a browser. The session helper is example
+code, not a public export.
 
-## 가이드와 API
+## Guides and API
 
-- [시작하기](docs/guide/getting-started.md) · [사용 가이드 목차](docs/guide/README.md)
-- [공개 함수·타입·오류](docs/guide/api.md) · [출력 옵션](docs/guide/output-options.md)
-- [입력·이미지·폰트](docs/guide/dom-integration.md) · [프레임워크 연동](docs/guide/frameworks.md)
-- [Playground](docs/guide/playground.md) · [문제 해결](docs/guide/troubleshooting.md)
-- [지원 상태](docs/guide/support.md) · [엔진과 출력 구조](docs/guide/architecture.md)
-
-용지 계산은 동기·순수 함수입니다.
+- [English quick start](docs/user/01-quick-start.md) · [한국어 시작하기](docs/ko/01-quick-start.md)
+- [Documentation index](docs/README.md) · [Core concepts](docs/user/02-core-concepts.md)
+- [Output and paper options](docs/user/04-output-options.md) · [Input and resources](docs/user/05-resources.md)
+- [Lifecycle and errors](docs/user/06-lifecycle-errors.md) · [Playground](docs/user/07-playground.md)
+- [Public API reference](docs/user/09-public-api.md) · [한글 API](docs/ko/09-public-api.md)
 
 ```js
 import {paperSize} from 'comins-capture';
-paperSize('A4'); // {width: 2480, height: 3508}, ISO·300 PPI
-paperSize('B4', {standard: 'JIS', orientation: 'landscape'});
+paperSize('A4'); // {width:2480, height:3508}; ISO, 300 PPI
+paperSize('B4', {standard:'JIS', orientation:'landscape'});
 ```
 
-출력 size의 `system:'jis'`와 용지 함수의 `standard:'JIS'`는 서로 다른 옵션입니다. PPI는 픽셀 수 계산용이며 파일 DPI 메타데이터를 재작성하지 않습니다. SVG는 foreignObject를 포함하며 순수 벡터·디자인 도구 호환을 보증하지 않습니다.
+Output options use `system:'jis'`; paperSize uses `standard:'JIS'`. PPI computes
+pixels without rewriting file DPI metadata. SVG contains foreignObject and is
+not a pure vector or design-tool interchange format.
 
-## Playground 로컬 실행
-
-저장소 루트에서 실행합니다.
+## Run the Playground locally
 
 ```sh
+git clone https://github.com/kim1124/comins-capture.git
+cd comins-capture
 npm ci --ignore-scripts
 npm run verify
 npm run dev
 ```
 
-[로컬 Playground](http://127.0.0.1:6004)를 열고 형식·크기·배치를 변경한 뒤 이미지 만들기→파일 저장을 실행합니다. `CAPTURE_PORT`로 포트를 변경할 수 있습니다. 개발 서버는 HMR을 제공하지 않으므로 소스 변경 후 다시 빌드합니다. `node examples/geometry.mjs`는 DOM 없이 용지 계산을 실행합니다.
+Open [the Capture Playground](http://127.0.0.1:6004). Override the port with
+CAPTURE_PORT. The server has no HMR; rebuild after source changes. Reset restores
+defaults and clears results. `node examples/geometry.mjs` runs without a DOM.
 
-## 0.0.1 후보와 검증
+## 0.0.1 candidate
 
-현재 후보는 정적 HTMLElement의 단일 출력에 집중합니다. crop·타일·부분 성공 및 미완성 실험 경로는 제거했으며 후속 검토는 저장소 문서에 보존합니다.
+The initial release focuses on static HTML, single output, scale, custom sizes
+and ISO/JIS paper. Unfinished crop, tile and partial paths have been removed.
+Actual Chrome 154.0.8037.98 on macOS/DPR2 passed 15 single-output/lifecycle/error
+and 15 resource/SVG checks on the benchmark runtime. The 64-node statement's
+capture-to-PNG measured p50 183.6 ms and p95 198.9 ms across 10 samples; 30
+sequential captures had zero failures. Paper dimensions passed 24 ISO/JIS and
+orientation cases, with JIS values corroborated from public supplier/manufacturer
+tables. JISC login is not required for this dimension check.
 
-2026-10-15 실제 Chrome154.0.8037.98·macOS·DPR2에서 제한된 정적 fixture의 기능15/15·자원/SVG15/15를 통과했습니다. 명세서64노드의 capture→PNG는10표본 p50 183.6ms·p95 198.9ms이며 반복30회 실패0을 확인했습니다. 0.0.1 후보 런타임은 해당 벤치마크 대상과 동일합니다. 문서 보완 뒤 기존 tarball은 현재 문서 전체를 포함하지 않습니다.
+Publication, remote CI and release closure remain separate steps. The exact
+artifact and source identity are recorded in the checkout's release worklog.
+See [browser evidence and limits](docs/user/08-browser-support.md).
 
-`npm run verify`는 타입·빌드·unit·consumer·라이선스를 확인합니다. `npm run test:frameworks`는 실제 tarball의 타입·SSR·소비 bundle을 구성하며 브라우저 실행 성공을 자동 판정하지 않습니다. `npm run test:research`는 보존된 연구 판정 도구를 검사합니다.
+## Browser support and limits
 
-## 브라우저와 제한
+Chrome technical quality is conditionally accepted for the measured static
+scope. Native Safari is excluded because known shadow/clip failures remain.
+Edge, Firefox and physical mobile devices are unverified for this candidate.
+Installed Chrome 155 metadata and WebKit tests do not establish native runtime
+support. Broad CSS, low-end systems, long-duration memory and full-image pixel
+equality are not guaranteed. Canvas is limited to 8192 px per side and
+32,000,000 px total.
 
-Chrome 한정 기술 품질은 조건부 합격입니다. Safari는 알려진 그림자·clip 실패로 정식 지원에서 제외하며 Edge/Firefox·실제 모바일은 미검증입니다. 저사양·범용 CSS·장기 메모리·원본 화면과의 전체 픽셀 일치는 보증하지 않습니다. 단일 Canvas 한도는 한 변8192px·면적32,000,000px입니다.
+## Repository guidance
 
-JIS 공식 원문 대조·최종 공개 설정·Git revision 고정 및 배포 승인이 남아 있습니다. [지원 상태](docs/guide/support.md)에 실제 실행·재사용·미검증 범위를 구분합니다.
+The [contribution guide](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/CONTRIBUTING.md), [repository guide](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/development/repository-guide.md)
+and [release preparation](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/docs/development/releasing.md) are checkout-only
+maintainer documents. User references are distributed with the package.
 
-## 저장소 안내
+## License and support
 
-저장소 checkout 전용 문서입니다. npm 패키지에는 포함하지 않습니다.
+[MIT](LICENSE) · [Changelog](https://github.com/kim1124/comins-capture/blob/codex-governance-v111/CHANGELOG.md) ·
+[Issues](https://github.com/kim1124/comins-capture/issues) ·
+[Comins Brand](https://comins-website.vercel.app/ko/)
 
-- [전체 문서 목차](docs/README.md) · [기여 안내](CONTRIBUTING.md)
-- [저장소 구조·개발·검증](docs/development/repository-guide.md) · [출시 준비](docs/development/releasing.md)
-
-Comins 사이트의 개발 중 안내와 현재 저장소 가이드를 구분하는 기준은 [사이트 연동](docs/guide/site-integration.md)을 따릅니다.
-
-## 라이선스와 지원
-
-[MIT](LICENSE) · [변경 이력](CHANGELOG.md) · [Comins 웹사이트](https://comins-website.vercel.app/ko/)
-
-빌드는 고정 SnapDOM3.2.0 최소 수정본과 원문 라이선스·출처·수정 기록을 내부 엔진으로 생성합니다. 공개 타입에 엔진 타입을 노출하지 않습니다. [제3자 고지](THIRD_PARTY_NOTICES.md)를 참고하십시오.
-
-패키지는 dist·README·LICENSE·THIRD_PARTY_NOTICES·docs/guide를 포함합니다. 연구 코드·검증 증거·개발 이월 기록·복구본은 배포 대상에서 제외합니다. 오류 보고 시 [문제 해결](docs/guide/troubleshooting.md)의 재현 정보 항목을 사용하십시오.
+The build supplies a pinned, minimally modified SnapDOM 3.2.0 engine behind an
+internal adapter, with upstream license and provenance. See
+[third-party notices](THIRD_PARTY_NOTICES.md). Public declarations expose no engine types.

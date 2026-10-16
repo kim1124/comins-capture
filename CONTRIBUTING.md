@@ -18,7 +18,7 @@ npm run verify
 1. 문제의 재현 조건·기대 결과·현재 결과와 영향을 받는 공개 API를 정리합니다. 브라우저 문제는 실제 실행 버전과 fixture를 기록합니다.
 2. `src/index.ts`와 [현재 API](docs/guide/api.md)를 확인하고 범위 안에서 최소 변경합니다. 엔진 import는 `src/engine`에 격리합니다.
 3. 버그를 구분하는 회귀 검증과 관련 gate를 실행합니다. 소스·타입·빌드·패키지 변경은 `npm run verify`가 기준입니다.
-4. 사용자 계약이 바뀌면 `docs/guide`·README·CHANGELOG를 함께 갱신합니다. 의미 있는 구현·설정·검증 계약 변경은 `docs/worklogs`에 일시·변경 파일·검증·잔여 이슈를 기록합니다.
+4. 사용자 계약이 바뀌면 `docs/guide`·`docs/user`·README·CHANGELOG를 함께 갱신하고 `npm run docs:sync`로 국문 참조를 생성합니다. `npm run check:docs`로 한영 문서·예제·API 정합성을 확인합니다. 의미 있는 구현·설정·검증 계약 변경은 `docs/worklogs`에 일시·변경 파일·검증·잔여 이슈를 기록합니다.
 5. 변경 목적·결과·검증한 revision 또는 artifact·실패 및 미실행 항목을 리뷰 자료에 포함합니다. 프레임워크 번들 성공을 브라우저 실행 성공으로 표시하지 않습니다.
 
 성공한 증거는 소스·관련 설정·의존성·fixture가 동일한 범위만 재사용합니다. 실패는 제품·테스트 계약·환경으로 분류한 뒤 영향을 받은 검증을 재실행합니다.

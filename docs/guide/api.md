@@ -66,7 +66,7 @@ paperSize('A4'); // {width: 2480, height: 3508}
 paperSize('B4', {standard:'JIS', ppi:254}); // {width:2570, height:3640}
 ```
 
-잘못된 입력은 RangeError입니다. 실제 출력 가능 크기나 인쇄 품질을 보증하지 않습니다. 용지 치수 공식 원문 대조는 출시 확인 항목입니다.
+잘못된 입력은 RangeError입니다. 실제 출력 가능 크기나 인쇄 품질을 보증하지 않습니다. 용지 치수는 공개 자료 교차 대조와 출력 기하 검증으로 확인했습니다. 근거와 ISO/JIS 차이는 [출력 옵션](output-options.md)을 따릅니다.
 
 ## CaptureError
 

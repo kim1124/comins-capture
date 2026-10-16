@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 2026-10-16: README를 Sortable 형식의 영문 소개·기능·설치·시작·프레임워크·API·Playground·후보 상태·지원·라이선스 순서로 정리하고 docs/user·docs/ko의 번호별 참조 문서10쌍과 실제 캡처 미리보기를 추가했습니다. 국문 원본 동기화·문서 정합성 명령을 추가하고 verify에 포함했습니다. private:false·publishConfig.access:public과 홈페이지·이슈 메타데이터를 로컬에 준비했습니다. JIS 원문 열람 대기 조건은 공개 자료 대조와24조합 기하 검증으로 해소했습니다. npm 게시·사이트 배포를 뜻하지 않습니다.
+
 - 2026-10-15: Sensitive data·Package 검증 CI와 공개 Git 신원 검사를 추가했습니다. npm 좌표 오탐 회귀 및 개인 정보 형태 탐지 검사를 포함하며 로컬 계정 경로가 있던 저장소 문서3곳을 정리했습니다. 원격 CI 활성화와 npm 게시 완료를 뜻하지 않습니다.
 
 - 2026-10-15: package·lockfile 버전을 0.0.1 로컬 후보로 맞췄습니다. private:true를 유지하며 JIS 공식 원문 확인과 publish 승인은 대기 중입니다. 런타임 변경 없이 배포 문서에 현재 Chrome 검증·벤치마크 및 알려진 취약점 조회 범위를 반영합니다.

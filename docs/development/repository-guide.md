@@ -16,6 +16,8 @@
 | test | unit·consumer·타입·HTTP 통합·브라우저 fixture·연구 도구 검사 |
 | scripts | 빌드·라이선스·로컬 서버·프레임워크/연구 보조 명령 |
 | docs/guide | 배포되는 사용자 가이드 원본 |
+| docs/user·docs/ko | 영문 참조 문서·원본에서 생성한 동일 번호의 국문 참조 문서 |
+| docs/assets | 실제 캡처 미리보기와 출처 기록 |
 | docs/development·docs/worklogs | 저장소 운영·이월 요구·시점별 증거 요약 |
 | dist | 빌드 산출물. 직접 편집하지 않음 |
 | output | 로컬 연구·벤치마크·후보 tarball과 원본 증거. Git 및 npm 배포 제외 |
@@ -33,7 +35,9 @@
 | npm run test:unit | 모듈 계산·정책·수명주기 등의 단위 검사 |
 | npm run test:consumer | 공개 import·exports·SSR import·출력 타입 계약 |
 | npm run check:licenses | lockfile과 설치 패키지 license 및 내부 수정 엔진 공급 정합성 |
-| npm run verify | typecheck→build→unit→consumer→license 전체 순서 |
+| npm run verify | typecheck→build→unit→consumer→license→문서 정합성 전체 순서 |
+| npm run docs:sync | docs/guide 원본으로 docs/ko의 번호별 참조 문서 갱신 |
+| npm run check:docs | 한영 참조 문서·링크·앵커·예제 문법·공개 타입·오류·용지표 정합성 |
 | npm run dev | 빌드 후 loopback Playground. 기본6004, CAPTURE_PORT로 변경 |
 | npm run test:frameworks | tarball 기반 소비 타입·SSR·브라우저 bundle 구성. 실제 브라우저 실행은 별도 |
 | node --test test/integration/resource-http.test.mjs | loopback HTTP 자원 정책·취소/회복 통합 검사 |
@@ -59,4 +63,4 @@ python3 -m unittest discover -s output/playwright/workbench -p 'test_*.py'
 
 ## 문서 갱신 기준
 
-사용자 계약은 `docs/guide`, 현재 출시 범위는 `docs/release-readiness.md`, 재개 위치는 `docs/HANDOFF.md`, 이월 요구는 `docs/development/next-version-memory.md`에 기록합니다. 과거 `docs/api-spec.md`·연구·계획을 현재 API 설명으로 복사하지 않습니다. 배포 guide에서 저장소 전용 파일을 상대 링크로 참조하지 않습니다.
+사용자 계약 원본은 `docs/guide`, 영문 참조는 `docs/user`, 원본에서 생성한 국문 참조는 `docs/ko`입니다. docs/guide 변경 후 docs:sync와 check:docs를 실행합니다. 현재 출시 범위는 `docs/release-readiness.md`, 재개 위치는 `docs/HANDOFF.md`, 이월 요구는 `docs/development/next-version-memory.md`에 기록합니다. 과거 `docs/api-spec.md`·연구·계획을 현재 API 설명으로 복사하지 않습니다. 패키지 문서에서 저장소 전용 파일은 원격 저장소 링크로 참조하며, 로컬 준비와 실제 원격 반영 완료를 구분합니다.

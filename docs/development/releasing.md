@@ -1,11 +1,12 @@
 # 최초 공개 배포 준비
 
-이 문서는 유지관리자를 위한 저장소 운영 안내입니다. 현재0.0.1은 `private:true`·미배포 후보이며 정식 공개 배포 준비가 끝난 상태가 아닙니다. 승인된 로컬 미게시 Comins Contract v1.12와 일치하는 Governance의 RELEASE_POLICY·OSS_LICENSE_POLICY·SENSITIVE_DATA_STANDARD를 기준으로 정리했습니다. 공통 정책 원본은 Governance가 소유합니다.
+이 문서는 유지관리자를 위한 저장소 운영 안내입니다. 현재0.0.1은 `private:false`·미배포 후보이며 정식 공개 배포 준비가 끝난 상태가 아닙니다. 승인된 로컬 미게시 Comins Contract v1.12와 일치하는 Governance의 RELEASE_POLICY·OSS_LICENSE_POLICY·SENSITIVE_DATA_STANDARD를 기준으로 정리했습니다. 공통 정책 원본은 Governance가 소유합니다.
 
 ## 현재 남은 조건
 
-- JIS P0138:1998 공식 원문에서 A3/A4/A5/B3/B4/B5 치수 대조. 공급업체 표 일치와 계산 테스트는 원문 확인을 대체하지 않습니다.
-- 공개용 package 설정·문서·Git revision과 정확한 tarball 고정. 현재 `private:true`를 자동으로 제거하지 않습니다.
+용지 치수는 2026-10-16 공개 업체 자료 교차 대조와 24조합 기하 검증으로 확인했습니다. JISC 로그인·공식 원문 열람은 필수 조건이 아닙니다. 원문 직접 열람 미실시와 검증 범위는 [대조 기록](../worklogs/2026-10-16-paper-dimension-corroboration.md)을 따릅니다.
+
+- 최종 문서·Git revision과 정확한 tarball 고정 및 검증. private:false·publishConfig.access:public과 홈페이지·이슈 메타데이터는 로컬에 준비했으며 실제 게시 승인을 의미하지 않습니다.
 - 첫 PR의 Gitleaks 필수 CI 활성화 및 공개 게시 경로 준비. 검증용 workflow는 로컬에 추가했으나 원격 실행·보호 설정은 미확인이고 publish workflow는 없습니다.
 - commit·push·PR·태그·Release·npm 게시의 유지관리자 승인.
 

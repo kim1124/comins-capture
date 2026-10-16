@@ -14,6 +14,19 @@
 
 name은 A3/A4/A5/B3/B4/B5, system은 iso/jis입니다. marginMm은 top/right/bottom/left 네 값을 모두 받습니다. 래스터는 mm×PPI÷25.4를 반올림하며 A4 300 PPI는 2480×3508 px, 10 mm 여백은 각 118 px입니다. PPI는 픽셀 계산용이며 파일 DPI 메타데이터를 재작성하지 않습니다.
 
+다음은 portrait 기준 mm 치수이며 landscape는 두 변을 바꿉니다. B열은 ISO와 JIS의 치수가 다르므로 system을 구분해야 합니다.
+
+| 이름 | ISO (mm) | JIS (mm) |
+|---|---|---|
+| A3 | 297×420 | 297×420 |
+| A4 | 210×297 | 210×297 |
+| A5 | 148×210 | 148×210 |
+| B3 | 353×500 | 364×515 |
+| B4 | 250×353 | 257×364 |
+| B5 | 176×250 | 182×257 |
+
+JIS 치수는 [TAKEO의 JIS P0138 치수표](https://takeopaper.com/knowledge/specific)와 [후지필름의 용지 치수표](https://www.fujifilm.com/fb/ja/support/colorprint/howto/paper/size)를 교차 확인했습니다. ISO는 [ISO 216:2007 공개 preview](https://preview.sist.si/sist-preview/36631/c0883203ea25445c9992bb09343620c5/ISO-216-2007.pdf)의 기존 대조 결과를 사용합니다. 이 표는 출력 크기 프리셋이며 종이의 물리적 허용차·측정 조건을 포함한 규격 전체 적합성이나 인증을 보증하지 않습니다.
+
 ## 배치·포맷
 
 원본 전체 → 출력 크기·용지 여백 → fit·align 순서로 계산합니다. fit 기본 contain, align 기본 `{x:0.5,y:0.5}`입니다. cover는 넘친 부분을 출력 영역에서 자르고 stretch는 축별 배율을 적용합니다. align 값은 0~1입니다.
