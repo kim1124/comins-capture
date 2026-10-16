@@ -4,6 +4,8 @@
 
 ## 최신 원격 상태
 
+2026-10-16 최종 거버넌스 점검 후 SECURITY.md·bug/feature Issue Forms·신고/출시 안내를 보완했습니다. 후속 승인으로 PVR·dependency alerts 활성화와 재조회에 성공했고 열린 의존성 알림0건, 검증된 Comins 신원의 기대값 Secrets2개 저장을 확인했습니다. [거버넌스 보완 기록](worklogs/2026-10-16-governance-remediation.md)을 현재 상태로 우선합니다. npm 게시는 보류하며 기존81파일 후보를 보존합니다. 아래의 PR/원격 상태는 과거 작업 기록입니다.
+
 2026-10-16 PR 리뷰에서 엔진 자체 폰트 요청·이미지 압축·큰 PNG 준비 실패를 재현하고 수정했습니다. 최신 검증은 [리뷰 수정 기록](worklogs/2026-10-16-pr-review-fixes.md)과 지원 가이드의 Chrome155 결과를 우선합니다. 과거 Chrome154 byte동일 재사용 조건은 이번 변경에 적용하지 않습니다. 아래 PR 생성 기록은 이전 head의 상태이며 새 head CI와 보호 병합 결과는 후속 운영 기록을 따릅니다.
 
 2026-10-16 [Draft PR #1](https://github.com/kim1124/comins-capture/pull/1)을 생성했습니다. head는 codex-0-0-1-release의1805ae4이며, [실제 GitHub Actions](https://github.com/kim1124/comins-capture/actions/runs/38840611332)에서 Sensitive data·Package가 모두 성공했습니다. 기본 브랜치 codex-governance-v111에 두 검사·앱 ID15368 고정·최신 base 요구·관리자 적용·PR 필수 보호를 설정했습니다. 승인 리뷰어 수는0이며 force push·삭제는 허용하지 않습니다. 기본 브랜치 소스는 a35dbe2 그대로이고 PR은 draft·미병합입니다.
