@@ -1,0 +1,93 @@
+# 입력과 자원 정책
+
+0.0.1 공개 `capture()`의 정적 HTML 계약입니다. 대상은 현재 document에 연결된 양의 크기를 가진 HTMLElement여야 합니다. body/documentElement 전체·다른 document·분리된 노드는 캡처하지 않습니다. 실제 검증 범위는 [지원 상태](support.md)를 따릅니다.
+
+## 정적 HTML 범위
+
+일반 HTML 텍스트·flex·table·IMG·CSS 이미지·장식용 before/after·선언된 웹 폰트를 처리합니다. 모든 CSS나 모든 HTML 요소의 재현을 보증하지 않습니다.
+
+| 입력 | 처리·조건 |
+|---|---|
+| 일반 정적 HTML | 연결·크기·태그·계산 스타일 검사 후 복제 |
+| IMG·CSS/pseudo 이미지 | loaded IMG와 지원 PNG/JPEG/WebP 바이트 필요 |
+| 웹 폰트 | 접근 가능한 stylesheet의 font-face 선언과 해당 파일 바이트 필요 |
+| SVG 이미지 | 직접 정규화 미지원. resolver로 소비자가 검증한 지원 raster Blob을 제공해야 함 |
+| 폼 컨트롤·video·canvas·iframe·인라인 SVG·custom element·열린 Shadow DOM | UNSUPPORTED_CONTENT |
+| fixed/sticky·스크롤 이동·backdrop-filter·실행 중 animation | UNSUPPORTED_CONTENT |
+| 캡처 root의 transform/zoom·세로 쓰기 | UNSUPPORTED_CONTENT |
+| 닫힌 Shadow DOM | 지원 밖. 플랫폼상 존재 감지 보장 불가 |
+
+버튼·입력·저장 링크는 캡처 대상 밖에 둡니다. 레이아웃·이미지 decode·프레임워크 flush를 완료한 후 capture를 호출합니다. 준비 중 자원을 누락하거나 부분 성공을 반환하지 않습니다.
+
+## 네트워크 정책
+
+기본값은 `network:'deny'`, `credentials:'omit'`입니다. 앱이 이미 표시한 이미지·폰트도 캡처 과정에서 바이트 확보가 필요할 수 있습니다. 앱 자체의 요청과 resolver가 직접 수행한 외부 동작까지 이 정책이 통제하지는 않습니다.
+
+신뢰하는 동일 출처 자원을 캡처가 직접 요청하게 할 경우입니다. capture와 target이 준비된 클라이언트 코드에서 실행합니다.
+
+```js
+const snapshot = await capture(target, {
+  resources: {network:'same-origin'},
+});
+try {
+  const result = await snapshot.toBlob({format:'png'});
+  // result.value를 사용합니다.
+} finally {
+  snapshot.dispose();
+}
+```
+
+다른 출처를 허용할 때는 origin만 명시합니다. 경로·쿼리·wildcard는 허용 목록 값이 아닙니다. 허용하더라도 CORS·CSP·응답 내용·decode 검사는 계속 적용됩니다.
+
+```js
+const options = {
+  resources: {
+    network:{origins:['https://assets.example.com']},
+    credentials:'omit',
+  },
+};
+```
+
+credentials를 same-origin으로 지정해도 교차 출처 요청에는 credentials를 보내지 않습니다. redirect는 거부하며 이미지·폰트 오류가 나면 다른 출처나 포맷으로 자동 대체하지 않습니다.
+
+## resolver로 바이트 제공
+
+이미 확보한 Blob을 URL 기준 Map에서 제공할 수 있습니다. 아래 함수의 cache는 애플리케이션이 채운 `Map<string, Blob>`이며 key는 해석된 절대 URL입니다.
+
+```js
+async function captureWithResources(target, cache) {
+  return capture(target, {
+    resources: {
+      network:'deny',
+      resolve: async ({url, signal}) => {
+        if (signal.aborted) throw signal.reason;
+        return cache.get(url);
+      },
+    },
+  });
+}
+```
+
+호출자는 반환 snapshot을 사용한 뒤 dispose해야 합니다. resolver는 `{resourceRef, kind, url, signal}`을 받고 `Blob | undefined`를 반환합니다. kind는 image/font입니다. undefined는 무시나 성공이 아니라 네트워크 정책 적용으로 이어지므로 deny 상태에서 미해결 자원은 실패합니다. 비동기 fetch를 구현한다면 전달받은 signal을 연결하고 바이트의 MIME·유효성을 확인합니다.
+
+폰트는 읽을 수 있는 stylesheet의 font-face가 필요하며 local() 선언·출처 불명 FontFace·검증할 수 없는 stylesheet는 거부합니다. 여러 src 파일 중 하나만 정상이라고 나머지 손상을 통과시키지 않습니다. 시스템 폰트 및 fallback은 SYSTEM_FONT 진단으로 환경 의존성을 알리며 브라우저 간 같은 글리프를 보증하지 않습니다.
+
+## 자원·출력 한도
+
+| 항목 | 한도 |
+|---|---|
+| 개별 준비 자원 | 16,000,000 bytes |
+| 준비 자원 합계 | 64,000,000 bytes |
+| 입력 이미지 | 한 변8192px·면적32,000,000px |
+| 검사 대상 HTML 노드 | 10,000개 |
+| 단일 출력 Canvas | 한 변8192px·면적32,000,000px |
+
+숫자 한도 이내라도 브라우저 메모리·decode·지원 입력 검사를 통과해야 합니다. 최대 크기 전체의 성능이나 성공을 실측한 것은 아닙니다.
+
+## 캡처 중 상태와 SVG 검증
+
+`ready → DOM 검사 → 자원 준비 → 엔진 직렬화 → SVG 검증 → 원본 변경 검사 → snapshot` 순으로 처리합니다. ready는 프레임워크 렌더와 자원 준비를 기다리는 용도이며 전달받은 signal을 존중해야 합니다. 검사 뒤 원본 DOM·계산 스타일·위치·크기가 바뀌면 SOURCE_CHANGED로 종료할 수 있습니다.
+
+생성된 SVG의 요소·속성·CSS URL을 허용 목록으로 검사하고 script·이벤트·외부 자원·DOCTYPE·entity·불확실한 CSS 구문을 거부합니다. 모든 출력은 같은 검증 SVG에서 생성합니다. 임의 SVG 입력을 받는 범용 sanitizer API나 소비 애플리케이션 전체의 네트워크 차단 기능은 아닙니다.
+
+오류는 [문제 해결](troubleshooting.md), 호출 옵션은 [API](api.md), 출력 크기·포맷은 [출력 옵션](output-options.md)을 참고하십시오.

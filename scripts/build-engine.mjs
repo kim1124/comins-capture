@@ -1,0 +1,12 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {createEngineSupply} from './engine-supply.mjs';
+const root=new URL('../',import.meta.url);
+const source=new URL('node_modules/@zumer/snapdom/',root);
+const manifest=JSON.parse(await readFile(new URL('package.json',source),'utf8'));
+const result=createEngineSupply(await readFile(new URL('dist/snapdom.mjs',source),'utf8'),await readFile(new URL('LICENSE',source),'utf8'),manifest.version);
+const output=new URL('dist/engine/vendor/',root);
+await mkdir(output,{recursive:true});
+await writeFile(new URL('snapdom.mjs',output),result.code);
+await writeFile(new URL('LICENSE',output),result.license);
+await writeFile(new URL('provenance.json',output),JSON.stringify(result.provenance,null,2)+'\n');
+console.log('Fixed engine component and required license generated.');

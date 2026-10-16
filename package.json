@@ -1,0 +1,32 @@
+{
+  "name": "comins-capture",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Framework-independent static HTML capture with single-image and ISO/JIS paper output",
+  "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/kim1124/comins-capture.git" },
+  "homepage": "https://comins-website.vercel.app/ko/capture/",
+  "bugs": { "url": "https://github.com/kim1124/comins-capture/issues" },
+  "keywords": ["comins", "capture", "html", "png", "svg", "paper"],
+  "publishConfig": { "access": "public" },
+  "engines": { "node": ">=24" },
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "files": ["dist", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "docs/README.md", "docs/guide", "docs/user", "docs/ko", "docs/assets"],
+  "sideEffects": false,
+  "scripts": {
+    "docs:sync": "node scripts/reference-docs.mjs --write",
+    "check:docs": "node scripts/check-docs.mjs",
+    "build": "tsc -p tsconfig.json && node scripts/build-engine.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:unit": "node --test test/unit/*.test.mjs",
+    "test:research": "node --test test/research/*.test.mjs output/playwright/workbench/*.test.mjs",
+    "test:frameworks": "npm run build && node scripts/framework-consumer.mjs",
+    "test:consumer": "node --test test/consumer/*.test.mjs",
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "dev": "npm run build && node scripts/dev-server.mjs",
+    "verify": "npm run typecheck && npm run build && npm run test:unit && npm run test:consumer && npm run check:licenses && npm run check:docs"
+  },
+  "dependencies": { "@zumer/snapdom": "3.2.0" },
+  "devDependencies": { "typescript": "6.0.3" }
+}

@@ -1,0 +1,43 @@
+# 프레임워크 연동
+
+로컬 `0.0.1`의 공개 `capture()`를 Vanilla·React·Vue·Svelte에서 소비합니다. 프레임워크별 별도 패키지나 hook export는 없으며 Core는 해당 runtime에 의존하지 않습니다.
+
+| 환경 | 예제 | 렌더·정리 계약 |
+|---|---|---|
+| Vanilla | `examples/frameworks/vanilla.mjs` | 연결된 HTMLElement, 반환 cleanup 호출 |
+| React 19.3.0 | `react.jsx` | ref·사용자 이벤트, effect cleanup, StrictMode setup/cleanup/setup마다 새 session |
+| Vue 3.5.43 | `vue.mjs` | ref·nextTick, onUnmounted |
+| Svelte 5.57.2 | `SvelteCapture.svelte` | tick 이후 bind:this 참조 전달, onDestroy |
+
+공통 `session.mjs`는 예제 소유 helper입니다. AbortController, snapshot, Blob URL을 보유하고 재실행·언마운트 때 정리합니다. 완료 전에 언마운트되면 결과를 UI에 반영하지 않습니다. 소비 애플리케이션에서도 같은 소유권을 유지하십시오. 렌더 안정화는 임의 시간 대기 대신 프레임워크 flush 또는 capture의 ready로 연결합니다.
+
+## Vanilla JavaScript
+
+`vanilla.mjs`의 mountExample은 연결된 HTMLElement를 session에 전달하고 cleanup 함수를 반환합니다. 화면 제거 시 cleanup을 호출해 진행 중 작업·snapshot·Blob URL을 정리합니다. 순수 HTML과 공개 capture만으로 시작하려면 [첫 캡처 예제](getting-started.md)를 사용합니다.
+
+## React
+
+`react.jsx`는 ref로 정적 대상을 보유하고 사용자 이벤트에서 실행합니다. effect setup마다 새 session을 만들고 cleanup에서 해제하므로 StrictMode의 setup→cleanup→setup에도 해제된 session을 재사용하지 않습니다. 프레임워크 DOM 렌더가 끝난 뒤 capture에 전달하고, 언마운트된 결과를 setState에 반영하지 않습니다.
+
+## Vue
+
+`vue.mjs`는 ref 대상을 사용하고 ready에서 nextTick을 기다립니다. onUnmounted에서 session을 해제하고 종료된 session의 결과로 반응형 상태를 갱신하지 않습니다. 별도 `comins-capture/vue` import 대신 루트 capture를 사용합니다.
+
+## Svelte
+
+`SvelteCapture.svelte`는 bind:this로 대상을 받고 tick 이후 session.run을 호출합니다. onDestroy에서 취소·자원 정리를 수행하며 종료된 session의 결과는 반영하지 않습니다. Svelte 전용 action export는 제공하지 않습니다.
+
+## 재현
+
+```sh
+npm run test:frameworks
+node scripts/framework-server.mjs output/framework-consumer/<출력된-실행-ID>
+```
+
+첫 명령은 로컬 tarball을 별도 디렉터리에 설치하고 타입 검사, 브라우저 bundle, DOM 없는 React/Vue/Svelte SSR을 실행합니다. 브라우저 소비 검사는 자동 통과로 간주하지 않습니다. 표시된 localhost:6005에서 실제 Chrome·Safari로 브라우저 버전을 입력하고 검증 버튼을 눌러야 합니다. 결과는 해당 실행 디렉터리의 results에 기록됩니다. 모든 의존성이 캐시에 있으면 `npm_config_offline=true npm run test:frameworks`로 재현할 수 있습니다.
+
+2026-10-13 실행 UA Chrome 154(정확 runtime patch 미확인)·네이티브 Safari 27.0.1에서 네 예제 모두 PNG 240×120, crop 출력 480×240의 픽셀, A5 SVG mm, 6타일, dispose 오류, Blob URL 해제, 진행 중 언마운트 취소와 재마운트를 통과했습니다. React StrictMode cleanup도 확인했습니다. 설치된 Chrome 정보는 155.0.8059.40이나 결과 JSON의 실제 UA는 `Chrome/154.0.0.0`입니다. 설치 버전을 실행 버전으로 보고한 이전 표기를 정정하며 Chrome 155 실행 지원은 확인되지 않았습니다. 원본 JSON은 보존합니다. 근거는 `output/research/release-acceptance-2026-10-13/browser-version-errata.json`입니다. 제한된 작성 fixture의 결과이며 모든 버전·SSR 캡처·모바일 지원을 뜻하지 않습니다.
+
+정적 DOM·자원 제약은 [입력 계약](dom-integration.md), 출력은 [옵션 가이드](output-options.md)를 따릅니다.
+
+2026-10-15 소비 fixture에서 crop·타일 호출을 제거하고 전체 대상 custom 480×240 출력을 확인하도록 갱신했습니다. 위 2026-10-13 결과는 정리 전 fixture의 역사입니다. 최종 정리 후보는 실제 실행 UA Chrome 154에서 네 예제 모두 통과했습니다. 정확 runtime patch는 UA에서 미확인이며 Safari는 이번에 재실행하지 않았습니다.

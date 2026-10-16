@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createElement} from 'react';
+import {renderToString as reactRender} from 'react-dom/server';
+import {createSSRApp} from 'vue';
+import {renderToString as vueRender} from 'vue/server-renderer';
+import {render as svelteRender} from 'svelte/server';
+import {capture,CaptureError,paperSize} from 'comins-capture';
+import {CaptureExample as ReactExample} from './examples/react.jsx';
+import {CaptureExample as VueExample} from './examples/vue.mjs';
+import SvelteExample from './examples/SvelteCapture.svelte';
+assert.equal(typeof document,'undefined');assert.equal(typeof capture,'function');assert.equal(typeof CaptureError,'function');assert.equal(paperSize('A4').width,2480);
+assert.match(reactRender(createElement(ReactExample)),/React capture/);
+assert.match(await vueRender(createSSRApp(VueExample)),/Vue capture/);
+assert.match(svelteRender(SvelteExample).body,/Svelte capture/);
+console.log('PASS: package import, React/Vue/Svelte server rendering without DOM');
