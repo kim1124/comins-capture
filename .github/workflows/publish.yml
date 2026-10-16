@@ -1,0 +1,121 @@
+name: Stage npm package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact package.json version to stage after bootstrap
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-stage
+  cancel-in-progress: false
+
+jobs:
+  verify-and-pack:
+    if: github.ref == 'refs/heads/codex-governance-v111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      package-file: ${{ steps.pack.outputs.package-file }}
+      sha256: ${{ steps.pack.outputs.sha256 }}
+    env:
+      GITLEAKS_VERSION: '8.30.1'
+      GITLEAKS_ARCHIVE: gitleaks_8.30.1_linux_x64.tar.gz
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Verify public history and requested version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-public-identities.mjs "$GITHUB_SHA"
+          node --input-type=module -e 'import fs from "node:fs"; const p=JSON.parse(fs.readFileSync("package.json")); if(p.version!==process.env.REQUESTED_VERSION) process.exit(1);'
+      - name: Require existing bootstrap and current maintainer identity
+        env:
+          COMINS_NPM_PUBLIC_NAME: ${{ secrets.COMINS_NPM_PUBLIC_NAME }}
+          COMINS_NPM_PUBLIC_EMAIL: ${{ secrets.COMINS_NPM_PUBLIC_EMAIL }}
+        run: node scripts/check-npm-public-identity.mjs
+      - run: npm ci --ignore-scripts
+      - run: npm run verify
+      - name: Install pinned Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive_path=$(mktemp "${RUNNER_TEMP}/comins-gitleaks.XXXXXX.tar.gz")
+          trap 'rm -f "$archive_path"' EXIT
+          curl --fail --silent --show-error --location --output "$archive_path" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${GITLEAKS_ARCHIVE}"
+          printf '%s  %s\n' "$GITLEAKS_SHA256" "$archive_path" | sha256sum --check --status
+          install -d .local/bin
+          tar -xzf "$archive_path" -C .local/bin gitleaks
+          test "$(.local/bin/gitleaks version)" = "$GITLEAKS_VERSION"
+      - name: Verify security controls
+        env:
+          GITLEAKS_BIN: .local/bin/gitleaks
+        run: node --test test/security/*.test.mjs
+      - name: Verify and pack exactly one artifact
+        id: pack
+        env:
+          GITLEAKS_BIN: .local/bin/gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_file=$(node scripts/verify-release-artifact.mjs)
+          artifact_sha256=$(sha256sum "$package_file" | cut -d ' ' -f 1)
+          printf 'package-file=%s\nsha256=%s\n' "$package_file" "$artifact_sha256" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-package-${{ inputs.version }}
+          path: ${{ steps.pack.outputs.package-file }}
+          if-no-files-found: error
+          retention-days: 1
+
+  stage:
+    needs: verify-and-pack
+    if: github.ref == 'refs/heads/codex-governance-v111'
+    environment: npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install --global npm@11.17.0 --ignore-scripts
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-package-${{ inputs.version }}
+          path: package-artifact
+      - name: Verify transferred artifact and current identity immediately before staging
+        env:
+          PACKAGE_FILE: ${{ needs.verify-and-pack.outputs.package-file }}
+          EXPECTED_SHA256: ${{ needs.verify-and-pack.outputs.sha256 }}
+          COMINS_NPM_PUBLIC_NAME: ${{ secrets.COMINS_NPM_PUBLIC_NAME }}
+          COMINS_NPM_PUBLIC_EMAIL: ${{ secrets.COMINS_NPM_PUBLIC_EMAIL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-release-artifact.mjs --digest "package-artifact/$PACKAGE_FILE" "$EXPECTED_SHA256"
+          node scripts/check-npm-public-identity.mjs
+          npm stage publish "package-artifact/$PACKAGE_FILE" --ignore-scripts --access=public --registry=https://registry.npmjs.org/

@@ -1,0 +1,60 @@
+name: Verify npm identity
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Bootstrap preflight uses the approved shared Comins account reference
+        required: true
+        type: choice
+        default: bootstrap-preflight
+        options:
+          - bootstrap-preflight
+          - bootstrap-version
+          - trusted-version
+          - current
+      version:
+        description: Exact published version for bootstrap-version or trusted-version
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/codex-governance-v111'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Verify provider-managed expected public identity
+        env:
+          COMINS_NPM_PUBLIC_NAME: ${{ secrets.COMINS_NPM_PUBLIC_NAME }}
+          COMINS_NPM_PUBLIC_EMAIL: ${{ secrets.COMINS_NPM_PUBLIC_EMAIL }}
+          MODE: ${{ inputs.mode }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$MODE" in
+            bootstrap-preflight)
+              node --input-type=module -e 'import {run} from "./scripts/check-npm-public-identity.mjs"; process.exitCode=run({args:[],packageJson:{name:"comins-sortable"}});'
+              ;;
+            bootstrap-version)
+              node scripts/check-npm-public-identity.mjs --bootstrap-version "$RELEASE_VERSION"
+              ;;
+            trusted-version)
+              node scripts/check-npm-public-identity.mjs --version "$RELEASE_VERSION"
+              ;;
+            current)
+              node scripts/check-npm-public-identity.mjs
+              ;;
+            *) exit 1 ;;
+          esac
