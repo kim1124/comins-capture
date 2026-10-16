@@ -4,7 +4,7 @@
 
 # API
 
-2026-10-15의 0.0.1 후보 계약. 로컬 `0.0.1`, 미배포입니다. 패키지 루트 `comins-capture`만 공개하며 deep import는 지원하지 않습니다.
+0.0.1 공개 API 계약입니다. 패키지 루트 `comins-capture`만 공개하며 deep import는 지원하지 않습니다.
 
 ## capture(target, options?)
 

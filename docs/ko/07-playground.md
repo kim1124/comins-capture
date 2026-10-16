@@ -4,7 +4,7 @@
 
 # Playground
 
-로컬 `0.0.1`, npm 미배포. `npm run dev`로 실행하고 localhost:6004를 엽니다. 공개 `capture()` → 검증 SVG → 출력 경로를 사용합니다. 원본 샘플은 640×420 CSS px입니다.
+0.0.1 저장소 Playground입니다. `npm run dev`로 실행하고 localhost:6004를 엽니다. 공개 `capture()` → 검증 SVG → 출력 경로를 사용합니다. 원본 샘플은 640×420 CSS px입니다.
 
 1. 형식·크기·맞춤을 선택합니다.
 2. 이미지 만들기로 결과와 실제 단위를 확인합니다.

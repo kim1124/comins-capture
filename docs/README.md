@@ -8,9 +8,9 @@ historical implementation plans and dated verification records.
 [Comins Brand](https://comins-website.vercel.app/ko/) ·
 [Capture introduction](https://comins-website.vercel.app/ko/capture/)
 
-## 0.0.1 candidate status
+## 0.0.1 scope
 
-0.0.1 remains unpublished. Static connected HTMLElement capture, single
+This guide describes the 0.0.1 contract. Static connected HTMLElement capture, single
 PNG/JPEG/Canvas/foreignObject SVG, conditional native WebP and ISO/JIS paper
 presets are implemented. Chrome acceptance is bounded by recorded fixtures;
 native Safari remains excluded due to known shadow/clip failures.

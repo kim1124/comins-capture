@@ -7,7 +7,7 @@
 용지 치수는 2026-10-16 공개 업체 자료 교차 대조와 24조합 기하 검증으로 확인했습니다. JISC 로그인·공식 원문 열람은 필수 조건이 아닙니다. 원문 직접 열람 미실시와 검증 범위는 [대조 기록](../worklogs/2026-10-16-paper-dimension-corroboration.md)을 따릅니다.
 
 - 최종 문서·Git revision과 정확한 tarball 고정 및 검증. private:false·publishConfig.access:public과 홈페이지·이슈 메타데이터는 로컬에 준비했으며 실제 게시 승인을 의미하지 않습니다.
-- 최종 원격 CI·보호 설정 재확인. PR #1 병합 소스 a8278d4의 push CI38842796042에서 Sensitive data·Package가 통과했고 필수 검사·strict·관리자 보호를 확인했습니다. publish workflow는 없습니다.
+- 최종 원격 CI·보호 설정 재확인. 보안 정책 보완은 PR #2·19a24db로 보호 병합했고 push CI38855390737에서 Sensitive data·Package가 통과했습니다. 이후 게시 경로 변경은 별도 PR·필수 CI·보안 검토로 확인합니다.
 - [보안 정책](../../SECURITY.md)과 bug/feature Issue Forms의 보호된 기본 브랜치 반영 및 해당 PR의 필수 CI 확인. 작성 상태만으로 공개 반영을 주장하지 않습니다.
 - Private Vulnerability Reporting·dependency alerts·기대 신원 Secrets의 현재 상태 재확인. 2026-10-16 후속 승인 뒤 PVR·dependency alerts 활성화와 알림 조회에 성공했고 열린 의존성 알림은0건입니다. 검증된 Comins 신원으로 기대값 Secrets2개를 저장하고 생성 메타데이터를 재확인했습니다. 원시 값은 기록하지 않았으며 게시 직전 신원 확인은 별도로 유지합니다.
 - commit·push·PR·태그·Release·npm 게시의 유지관리자 승인.
@@ -19,7 +19,7 @@ Safari는 알려진 그림자·clip 실패로 정식 지원에서 제외합니�
 1. [출시 조건](../release-readiness.md)과 [지원 상태](../guide/support.md)의 범위·실행 증거·남은 항목을 확인합니다.
 2. version·lockfile·CHANGELOG·README·docs/guide를 같은 후보에 맞춥니다. 미지원 기능을 정식 지원으로 표시하지 않습니다.
 3. `npm run verify`를 실행하고 관련 브라우저 증거의 소스·설정·의존성 동일성을 확인합니다. package metadata 변경은 영향을 받는 artifact 검증을 무효화하지만 동일 runtime의 성능 결과까지 자동 무효화하지는 않습니다.
-4. 최종 후보마다 한 번 `npm pack --json --ignore-scripts`로 artifact를 만들고 반환 파일 목록을 package.json의 files 허용 범위와 비교합니다. 이 저장소는 현재 release workflow가 없어 로컬 후보를 준비합니다. 이후 workflow가 도입되면 그 workflow가 생성한 정확한 artifact가 기준입니다.
+4. 최종 후보마다 한 번 `npm pack --json --ignore-scripts`로 artifact를 만들고 반환 파일 목록을 package.json의 files 허용 범위와 비교합니다. 최초0.0.1은 이미 검증한 로컬 후보를 사용합니다. 이후 [trusted publishing 경로](trusted-publishing.md)의 workflow가 생성한 정확한 artifact가 기준이며 별도 로컬 후보로 바꾸지 않습니다.
 5. 같은 tarball을 임시 디렉터리에 추출해 Gitleaks와 LICENSE·제3자 고지·내부 엔진 공급을 검사합니다. scanner 출력·탐지값은 보존하지 않고 상수 형태의 결과만 기록합니다.
 6. 같은 tarball을 별도 소비 프로젝트에 설치해 공개 import·타입·SSR import·필요한 브라우저 소비 검사를 수행합니다. 해시·npm integrity·파일 수·검증 상태를 기록합니다.
 7. 승인된 소스 revision과 정확한 후보를 연결해 게시 단계로 넘깁니다. 게시 직전에 다시 pack한 다른 파일로 바꾸지 않습니다.
@@ -30,7 +30,7 @@ Safari는 알려진 그림자·clip 실패로 정식 지원에서 제외합니�
 
 새 npm 패키지는 registry에 존재하기 전 staged publishing/trusted publisher를 등록할 수 없으므로 첫 공개 버전은 유지관리자2FA로 대화형 bootstrap 게시합니다. 자동화 토큰은 사용하지 않습니다. 실제 최초 게시 전 현재 공식 npm 동작과 계정·패키지 준비 상태를 다시 확인해야 합니다.
 
-첫 게시 직후 정확한 GitHub 저장소·workflow 파일·npm environment를 trusted publisher로 등록합니다. 이후에는 trusted publisher의 staged publish와 유지관리자2FA 승인을 사용하고 토큰 게시를 허용하지 않습니다. 해당 identity 검사·workflow는 아직 이 모듈에 구현되지 않았습니다. 그 준비를 완료하기 전 자동 게시가 가능하다고 안내하지 않습니다.
+첫 게시 직후 kim1124/comins-capture·publish.yml·npm environment를 trusted publisher로 등록합니다. 이후에는 trusted publisher의 staged publish와 유지관리자2FA 승인을 사용하고 토큰 게시를 허용하지 않습니다. [게시 경로와 신원 검사](trusted-publishing.md)의 코드·설정·실제 실행 결과를 각각 확인하며 workflow 작성만으로 provider 등록이나 실제 staging 성공을 주장하지 않습니다.
 
 계정 식별 정보는 승인된 공개 handle·GitHub noreply·용도가 정해진 service identity 경계를 따릅니다. npm에는 GitHub noreply 대신 이메일 검증을 완료한 전달 가능한 Comins service identity를 사용합니다. 기대값은 이 저장소의 GitHub Actions Secrets `COMINS_NPM_PUBLIC_NAME`·`COMINS_NPM_PUBLIC_EMAIL`에만 보관합니다. 설정 시 검증된 기존 Comins 서비스 신원과 npm profile을 값 노출 없이 비교하고 이메일 검증·게시용2FA·비어 있는 개인 프로필을 확인합니다. 이 일치는 기대값 설정·검증을 대신하지 않습니다. 게시 직전 기대값과 현재 신원을 다시 확인하고 결과가 없거나 불일치하면 중단합니다.
 

@@ -87,7 +87,7 @@ for (const path of ['docs/guide/output-options.md','docs/user/04-output-options.
 for (const path of ['README.md','docs/guide/getting-started.md','docs/guide/support.md','docs/guide/api.md','docs/development/releasing.md']) {
   assert.doesNotMatch(await read(path), /JIS[^\n]*(?:원문 확인 대기|원문 확인이 남|공식 원문 대조·최종)|원문 대조는 출시 확인 항목/,path);
 }
-const expected = ['Features','Installation','Quick Start','Choose a framework','Guides and API','Run the Playground locally','0.0.1 candidate','Browser support and limits','License and support'];
+const expected = ['Features','Installation','Quick Start','Choose a framework','Guides and API','Run the Playground locally','0.0.1 scope','Browser support and limits','License and support'];
 const headings=[...(await read('README.md')).matchAll(/^## (.+)$/gm)].map(m=>m[1]);
 assert.deepEqual(headings.filter(h=>expected.includes(h)),expected);
 for(const [name] of topics) assert.ok((await read('docs/README.md')).includes(`user/${name}.md`) && (await read('docs/README.md')).includes(`ko/${name}.md`));

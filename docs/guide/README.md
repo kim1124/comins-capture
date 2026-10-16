@@ -2,7 +2,7 @@
 
 [Comins 웹사이트](https://comins-website.vercel.app/ko/) · [Capture 소개](https://comins-website.vercel.app/ko/capture/) · [시작하기](getting-started.md) · [API](api.md)
 
-2026-10-15 정리 기준. 0.0.1 후보 계약이며 패키지는 로컬 `0.0.1`, 미배포입니다.
+0.0.1의 정적 HTML·단일 출력 계약입니다. 실제 게시 상태는 public registry와 유지관리자의 출시 기록에서 확인합니다.
 
 1. [개발 시작](getting-started.md): 로컬 실행과 사용 순서
 2. [Playground](playground.md): 단일 출력·용지·저장·취소

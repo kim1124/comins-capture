@@ -12,7 +12,7 @@ scale, custom size, or ISO/JIS paper size. WebP requires native encoder support.
 [English docs](docs/README.md) · [한국어 가이드](docs/ko/01-quick-start.md)
 · [Capture website](https://comins-website.vercel.app/ko/capture/)
 
-**0.0.1 candidate — not published to npm.** Use a maintainer-provided tarball.
+**0.0.1 — static HTML and single-output capture.**
 The Capture website is a development introduction; current contracts are in
 this repository's guides.
 
@@ -39,11 +39,12 @@ Shadow DOM, form/scroll state and PDF are outside 0.0.1. See
 
 ## Installation
 
-Registry installation is not available yet. Copy the reviewed candidate tarball
-into the consuming application and install it there:
+For the registry release, install the exact version in the consuming application.
+Before the version appears on npm, use the reviewed maintainer-provided tarball:
 
 ```sh
-npm install --ignore-scripts ./comins-capture-0.0.1.tgz
+npm install --ignore-scripts comins-capture@0.0.1
+# Offline candidate: npm install --ignore-scripts ./comins-capture-0.0.1.tgz
 ```
 
 Use Node.js 24 or later and ESM. A browser bundler or application-owned import
@@ -122,7 +123,7 @@ Open [the Capture Playground](http://127.0.0.1:6004). Override the port with
 CAPTURE_PORT. The server has no HMR; rebuild after source changes. Reset restores
 defaults and clears results. `node examples/geometry.mjs` runs without a DOM.
 
-## 0.0.1 candidate
+## 0.0.1 scope
 
 The initial release focuses on static HTML, single output, scale, custom sizes
 and ISO/JIS paper. Unfinished crop, tile and partial paths have been removed.
@@ -142,7 +143,7 @@ See [browser evidence and limits](docs/user/08-browser-support.md).
 
 Chrome technical quality is conditionally accepted for the measured static
 scope. Native Safari is excluded because known shadow/clip failures remain.
-Edge, Firefox and physical mobile devices are unverified for this candidate.
+Edge, Firefox and physical mobile devices are unverified for this runtime.
 Installed browser metadata and WebKit tests do not establish native runtime
 support. Broad CSS, low-end systems, long-duration memory and full-image pixel
 equality are not guaranteed. Canvas is limited to 8192 px per side and
