@@ -119,14 +119,18 @@ if(direct)await check('abort after source draw clears allocated renderer interme
 });
 base.width=base.height=0;snapshot.dispose();
 for(const kind of ['abort','timeout','dispose'])await check(`pending decode ${kind} drains without Canvas retention`,async()=>{
- const current=await capture(source),Original=window.Image;let release,entered;
+ const current=await capture(source),imagePrototype=source.ownerDocument.defaultView.HTMLImageElement.prototype;
+ const originalDecode=Object.getOwnPropertyDescriptor(imagePrototype,'decode');let release,entered;
  const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
- window.Image=class extends Original{async decode(){await super.decode();entered();await gate;}};
  const controller=new AbortController();
  try{
+  expect(typeof originalDecode?.value==='function','Native image decode descriptor unavailable');
+  // Hook the actual image method: Safari may bypass a replaced window.Image constructor.
+  Object.defineProperty(imagePrototype,'decode',{...originalDecode,value:async function(...args){await originalDecode.value.apply(this,args);entered();await gate;}});
   const run=await tracked(async()=>{
    const operation=current.toCanvas({...cases[2].options,...(kind==='timeout'?{timeoutMs:100}:{signal:controller.signal})});
-   const outcome=operation.then(value=>{value.value.width=value.value.height=0;return {unexpected:true};},error=>({code:error.code}));await started;
+   const outcome=operation.then(value=>{value.value.width=value.value.height=0;return {unexpected:true};},error=>({code:error.code}));
+   await Promise.race([started,outcome.then(()=>{throw Error('Output settled before pending decode hook entered');})]);
    if(kind==='abort')controller.abort();if(kind==='dispose')current.dispose();
    const rejected=await outcome;expect(rejected.code===({abort:'ABORTED',timeout:'TIMEOUT',dispose:'DISPOSED'}[kind]),'Pending decode rejection mismatch');
    if(kind!=='dispose'){let busy;try{await current.toSvg();}catch(error){busy=error.code;}expect(busy==='BUSY','Pending renderer drain lost its lease');}
@@ -134,7 +138,7 @@ for(const kind of ['abort','timeout','dispose'])await check(`pending decode ${ki
    if(kind!=='dispose')await current.toSvg();return rejected;
   });
   if(run.error)throw run.error;expect(run.allocated.every(c=>!c.width&&!c.height),'Late renderer Canvas retained');return {rejected:run.value.code,allocations:run.allocated.length};
- }finally{release();window.Image=Original;current.dispose();}
+ }finally{release();if(originalDecode)Object.defineProperty(imagePrototype,'decode',originalDecode);current.dispose();}
 });
 await check('fractional source uses ceil allocation and actual fractional source crop',async()=>{
  const target=document.createElement('div');target.style.cssText='width:620.25px;height:560.5px;background:#e0203c';document.body.append(target);

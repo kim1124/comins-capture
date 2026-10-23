@@ -1,21 +1,21 @@
 # 최초 출시 범위와 완료 기준
 
-## 2026-10-23 · 0.0.2 로컬 후보 현재 판정
+## 2026-10-24 · 0.0.2 로컬 후보 현재 판정
 
-**로컬 구현·범위 한정 검증 완료, 출시 보류(`releaseReady=false`)**입니다. 공개 게시 이력이 있는 0.0.1과 구분합니다. 이번 문서 정리는 기존 최종 증거를 재사용하며 새 전체 verify·브라우저·보안 검사를 실행한 기록이 아닙니다. 승인된 local-only Contract v1.12는 미게시 상태입니다.
+**범위 한정 검증 완료, 출시 보류(`releaseReady=false`)**입니다. 기준은 [Draft PR #5](https://github.com/kim1124/comins-capture/pull/5)의 head `7d1bf97433edd1d33bcccd43f0a649742c07558e`이며, 후속 native fixture·작업 리포트·본 문서의 로컬 미커밋 변경은 이 PR/CI에 포함되지 않았습니다. 공개 0.0.1 게시 이력과 구분하며 승인된 local-only Contract v1.12는 미게시 상태입니다. 이번 문서 갱신은 아래 기록을 재사용하고 문서 검사만 수행합니다.
 
 | 0.0.2 항목 | 현재 근거와 판정 |
 |---|---|
-| 로컬 구현 및 자동 gate | 최종 verify PASS: unit 84/84·consumer 6/6·typecheck/build/licenses/docs. 제한적 SVG flow와 CSS 경계 수정 완료 |
-| 영향 브라우저 검증 | 설치 Chrome 155 DPR1·DPR2, WebKit 26.5 DPR2의 8 suite × 3 환경 = 24/24 PASS. 독립 CSS 조건 56/56 PASS. WebKit은 native Safari 증거가 아님 |
-| 로컬 사이트 UI | 한영 quick-start/single-output 4/4 PASS. 검증 응답 대체 방식이며 실제 후보 JS 20개 SHA 대조. 설치 0.0.1 업그레이드·운영 배포 미실행 |
-| 범위 한정 보안 변경분 검토 | scan `143dfad2-6ebd-4819-a7a1-008e6394d2c0`, authoritative source/config/tooling 24개 직접 검토, 확정 취약점 0건. 전체 저장소·vendor·신규 advisory·런타임 공격 감사 아님 |
-| 최종 후보 native Safari·대표 native UI 인수 | 미실행. 기존 OS 인증/automation 차단 유지. 과거 Safari 후보 통과와 현재 자동 fixture 통과로 대체하지 않음 |
-| 최종 package artifact·provenance·보안 조건 | 미실행. 최종 .tgz 생성·추출·격리 설치/소비·Gitleaks·해당 artifact provenance/OIDC 등 실제 단계 증거 확인 필요. 파일목록 dry-run은 이 인수가 아님 |
-| 원격 CI·필수 검사 | 0.0.2 최종 revision 대상 미실행. 0.0.1의 원격 PASS를 재사용하지 않음 |
-| 게시 승인 및 운영 반영 | 별도 명시 승인 필요. commit/push/실제 PR·publish/deploy 미실행 |
+| 로컬 구현 및 자동 gate | fixture 보완 후 verify PASS: unit 84/84·consumer 6/6·typecheck/build/licenses/docs. 제품 src/dist/package는 불변 |
+| 영향 브라우저 검증 | 기존 Chrome155 DPR1·DPR2/WebKit26.5 DPR2의 24/24 suite·독립 CSS56/56 PASS는 기록 재사용. 공통 fixture 보완 후 native-downscale만 Chrome DPR1=19/19·DPR2=17/17, WebKit DPR2=19/19 각1회 PASS |
+| 로컬 사이트 UI | 한영 quick-start/single-output 4/4 PASS는 기록 재사용. 검증 응답 대체 방식이며 경로별 후보 JS20개 SHA 대조. 설치0.0.1 업그레이드·운영 배포 미실행 |
+| 범위 한정 보안 변경분 검토 | scan `143dfad2-6ebd-4819-a7a1-008e6394d2c0`, authoritative source/config/tooling24개 직접 검토, 확정 취약점0건의 기록. 전체 저장소·vendor·신규 advisory·런타임 공격 감사 아님 |
+| native Safari·대표 출력/UI | 실제 Safari27.0.1·native DPR2·1512×859 한정11 suite/175조건 PASS: 기존10 suite 재사용+수정한 native-downscale19/19 재실행. 대표 출력·UI는 제한적 질적 관찰이며 source 픽셀 동등·사용자 직접 인수·범용 heap 누수 부재는 미확립 |
+| package artifact·provenance·보안 조건 | 기준7d1bf974의 로컬 진단83파일은 exact bytes·추출본 silent Gitleaks·license·격리 소비/SSR/API/types PASS. 최초DNS 환경 실패 후 허용 환경PASS를 구분하고 fixture 보완 후 재pack0회. canonical workflow artifact·npm/OIDC provenance·identity·registry closure는 미완료 |
+| 원격 CI·필수 검사 | PR5 head7d1bf974의 [CI39978904763](https://github.com/kim1124/comins-capture/actions/runs/39978904763)에서 Package·Sensitive data SUCCESS. 후속 로컬 미커밋3파일은 미포함이며 최종 revision의 CI는 별도 확인 필요 |
+| 게시 승인 및 운영 반영 | 기존67파일 commit/push·OPEN Draft PR5 생성 완료, 미병합. 후속 로컬 변경은 미커밋. merge/publish/deploy·운영 반영은 미실행이며 별도 명시 승인 필요 |
 
-제한된 block 문맥의 SVG 줄 배치 보완은 모든 구조·배율의 줄 배치 해결을 의미하지 않습니다. 관련 `var()`·unknown selector·지원하지 않는 CSS는 기존 strict 오류가 유지됩니다. 보안/라이선스 로컬 PASS는 최종 배포 artifact 검증을 대신하지 않으며 0.0.1의 provenance 예외는 0.0.2 승인으로 해석하지 않습니다. 상세 근거는 [최종 CSS 인수](worklogs/2026-10-23-css-boundary.md), [SVG flow 검증](worklogs/2026-10-23-svg-flow.md), [브라우저 지원 상태](guide/support.md)를 따릅니다.
+제한된 block 문맥의 SVG 줄 배치 보완은 모든 구조·배율의 줄 배치 해결을 의미하지 않습니다. 관련 `var()`·unknown selector·지원하지 않는 CSS는 기존 strict 오류가 유지됩니다. native/로컬 진단 artifact PASS는 canonical artifact·게시 인수를 대신하지 않으며 0.0.1의 provenance 예외는 0.0.2에 승계하지 않습니다. 상세 근거는 [native Safari 및 fixture 후속](worklogs/2026-10-24-native-safari.md), [최종 CSS 인수](worklogs/2026-10-23-css-boundary.md), [SVG flow 검증](worklogs/2026-10-23-svg-flow.md), [브라우저 지원 상태](guide/support.md)를 따릅니다.
 
 ## 0.0.1 최초 게시 및 준비 이력
 
