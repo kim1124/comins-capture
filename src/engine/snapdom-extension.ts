@@ -4,9 +4,11 @@ import type {OperationContext} from './contract.js';
 /** Internal bridge for the fixed modified bundle. This is not a DOM preparer or image decoder. */
 export interface ExtensionBindings {
   readonly images: readonly {readonly url: string; readonly dataUrl: string}[];
+  readonly scrollbarCss?: (source: Element) => string;
   readonly cloneShallow: (source: Node) => Node;
 }
 export interface ExtensionSession {
+  collectScrollbarCss(source: Element): string;
   shallowClone(source: Node): Node;
   resolveImage(url: string): Promise<{ok: true; data: string}>;
   assertComplete(): void;
@@ -24,6 +26,7 @@ function preparedImageData(value:string):boolean {
 export function createExtensionSession(bindings: ExtensionBindings, context: OperationContext): ExtensionSession {
   const images=new Map<string,string>();
   let clone: ExtensionBindings['cloneShallow'] | undefined=bindings.cloneShallow;
+  let scrollbarCss=bindings.scrollbarCss;
   let disposed=false, failure: CaptureErrorCode | undefined;
   const fail=(code:CaptureErrorCode):never=>{failure??=code;throw new CaptureError(failure,'capture');};
   const check=()=>{
@@ -42,6 +45,11 @@ export function createExtensionSession(bindings: ExtensionBindings, context: Ope
     }
   }catch{images.clear();fail('RESOURCE_UNVERIFIABLE');}
   return Object.freeze({
+    collectScrollbarCss(source:Element) {
+      check();
+      if(!scrollbarCss)return fail('ENGINE_FAILED');
+      try{const css=scrollbarCss(source);check();return css;}catch(error){check();return fail(error instanceof CaptureError?error.code:'ENGINE_FAILED');}
+    },
     shallowClone(source:Node) {
       check();let result:Node;
       try{result=clone!(source);}catch{check();return fail('ENGINE_FAILED');}
@@ -54,7 +62,7 @@ export function createExtensionSession(bindings: ExtensionBindings, context: Ope
       return {ok:true as const,data};
     },
     assertComplete:check,
-    dispose(){disposed=true;images.clear();clone=undefined;},
+    dispose(){disposed=true;images.clear();clone=undefined;scrollbarCss=undefined;},
   });
 }
 interface EngineContext {readonly __comins?: ExtensionSession}
@@ -63,5 +71,6 @@ function session(context:EngineContext):ExtensionSession {
   return context.__comins;
 }
 /** Names imported only by the generated engine. No global hooks or default network fallback here. */
+export function collectScrollbarCss(source:Element,context:EngineContext):string {return session(context).collectScrollbarCss(source);}
 export function shallowClone(source:Node,context:EngineContext):Node {return session(context).shallowClone(source);}
 export async function resolveImage(url:string,context:EngineContext):Promise<{ok:true;data:string}> {return session(context).resolveImage(url);}

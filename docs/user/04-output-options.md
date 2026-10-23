@@ -63,6 +63,48 @@ JPEG/WebP quality defaults to 0.92. Do not specify quality for PNG/SVG.
 WebP requires native support for the requested MIME. Unsupported encoders return
 FORMAT_UNSUPPORTED without fallback. SVG contains foreignObject.
 
-Canvas output is limited to 8192 px per side and 32,000,000 px total. Larger
-requests fail with OUTPUT_LIMIT; there is no automatic downscaling or tiling.
-The caller owns returned Canvases and application-created Blob URLs.
+Each Canvas is limited to 8192 px per side and 32,000,000 px total. Exceeding
+either limit returns OUTPUT_LIMIT; there is no automatic downscaling or tiling.
+For the existing direct foreignObject/XHTML-div/CSS-zoom raster path, when both
+scales are at most 1 and at least one is below 1, the renderer fixes original
+layout into a 1× Canvas before shrinking. Its ceil-sized original intermediate
+is checked against the same limits before allocation, so even a small final
+output may return OUTPUT_LIMIT. This applies only when that branch is selected,
+not globally to capture inputs. The final source crop retains the true fractional
+dimensions; each operation clears its temporary Canvas in finally. Existing
+reciprocal rendering and effective-scale-1/upscale output remain unchanged.
+SVG shrinking uses only the limited text correction described below. The caller owns returned
+Canvases and application-created Blob URLs.
+
+## Limited SVG shrinking text preservation
+
+The 2026-10-23 local candidate keeps eligible absolute-positioned single text
+leaves and plain block paragraphs at their original shaping size, then geometrically shrinks its paint while
+retaining the container's existing shadow and clipping path. This applies only
+to the direct foreignObject SVG path when both effective CSS scales are below 1;
+mm output is converted to CSS pixels before this decision. It does not embed a
+PNG, enlarge text widths, force nowrap, or change font attributes.
+
+Eligibility is deliberately narrow: horizontal LTR, one Text node, no element
+children, padding, border, generated content, unsupported text effects, or original
+transform/zoom chain. Absolute leaves require one original rendered line. Static
+or relative block paragraphs may contain multiple lines, but require an ordinary
+block ancestor chain. Flex/grid, table, inline, flow-root, float and multicolumn
+contexts retain the previous path, as do mixed inline and RTL content. Captures
+with floats, negative margins or paint effects outside element boxes, and leaves
+overlapping non-ancestor elements, are also excluded to preserve paint order.
+This does not calculate general CSS paint bounds. An inspection-budget overflow
+skips normal-flow correction without adding a capture input limit. Earlier reflow
+may remain on fallback paths. Original
+used sizes are retained; ignored static insets stay inactive and capture checks
+all line rectangles for source changes. Primitive text geometry and typography are
+frozen during capture; output never rereads the original DOM. Default SVG,
+effective-scale-1/upscale, reciprocal rendering and raster output are unaffected
+by this text correction.
+
+The serializer preserves zoom numeric precision, but exact cancellation in the
+browser is not guaranteed at every scale. This remains a partial text-layout fix
+with no general HTML-to-vector conversion guarantee.
+Existing WebKit shadow/clip defects when externally enlarging the whole SVG remain
+separate. Native Safari and final acceptance are still pending; see
+[Browser support](08-browser-support.md).

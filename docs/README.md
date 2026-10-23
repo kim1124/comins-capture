@@ -8,12 +8,49 @@ historical implementation plans and dated verification records.
 [Comins Brand](https://comins-website.vercel.app/ko/) ·
 [Capture introduction](https://comins-website.vercel.app/ko/capture/)
 
-## 0.0.1 scope
+## Single-output scope and local 0.0.2 candidate
+
+The October 23 plain-block extension passed 51/51 focused cases per configuration
+and all 30 Chrome/WebKit suites. Types/build, 73 unit/6 consumer, licenses and all
+46 distinct research checks passed. The initial docs failure was fixed and the
+affected docs check passed; a loopback environment failure was resolved by an
+affected-only rerun. Runtime hashes stayed unchanged. Independent review confirmed
+float and paint-order fixes. Native Safari and general fidelity remain pending.
+Earlier absolute-only
+SVG text correction: final verify passed 66 unit/6 consumer
+tests, type/build/licenses/docs; 46 distinct research tests and 27 Chrome/WebKit
+suites passed. One research server test was rerun after an environment permission
+failure. Native Safari and general SVG fidelity remain pending. The October 21
+numbers below belong to the earlier runtime.
+
 
 This guide describes the 0.0.1 contract. Static connected HTMLElement capture, single
 PNG/JPEG/Canvas/foreignObject SVG, conditional native WebP and ISO/JIS paper
-presets are implemented. Chrome acceptance is bounded by recorded fixtures;
-native Safari remains excluded due to known shadow/clip failures.
+presets are implemented. The unpublished 0.0.2 candidate preserves this API.
+Chrome acceptance is bounded by recorded fixtures. The recorded 2026-10-21
+candidate passed type/build, 59 unit and 6 consumer tests, licenses/docs and 46
+research tests. Installed Chrome 155.0.8059.85 at DPR1/2 and WebKit 26.5 at DPR2
+each passed seven suites: engine 6/6, cold images 6/6, resources 15/15,
+output/lifecycle 7/7, automatic visual 7/7, paper clipping 15/15 and raster
+downscale 19/17/19 respectively.
+
+The direct foreignObject/CSS-zoom raster path uses a per-operation original-size
+Canvas before shrinking, preserving the representative normal-text label,
+shadows and clipping together. Existing reciprocal rendering remains intact.
+The October 23 local change adds a limited SVG correction for eligible absolute
+single text leaves without PNG embedding. General HTML text fidelity and existing
+WebKit external-enlargement clip defects remain unresolved. The current SVG
+change and final gate status are described in the [support guide](guide/support.md).
+The intermediate ceil-sized Canvas has the same 8192-side/32-million-area limits,
+so a small final output may still return OUTPUT_LIMIT on this path.
+
+Historical Safari 27.0.1 DPR2 results on the previous renderer include 49 automatic
+passes and an actual A4 text-wrap defect. Native Safari has not run on the new
+revision because of CUA contention and disabled SafariDriver remote automation.
+Chrome UI source/output comparison and human review are also unperformed.
+Historical Safari and framework results do not establish support for this
+revision. Final package creation, remote CI, publication and deployment remain
+pending. See the support guide for browser versions and exact limits.
 
 JIS 치수는 공개 업체 자료와 ISO/JIS·방향별24조합 기하 검증으로 확인했습니다.
 JISC 로그인·원문 열람은 필수 조건이 아닙니다. 최종 artifact·소스 revision·

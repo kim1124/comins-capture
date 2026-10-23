@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 const module=await import('../../dist/core/capture.js').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e;});
 const required=()=>assert.equal(typeof module.createCapturePipeline,'function');
+const {CaptureError}=await import('../../dist/errors.js');
 const deferred=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};};
 function fixture(overrides={}){
  const events=[],doc={},source={ownerDocument:doc},preparedRoot={ownerDocument:doc};
@@ -65,6 +66,17 @@ test('dispose cancels outputs but retains artifacts until late rendering complet
  await assert.rejects(snapshot.toSvg(),{code:'BUSY'});snapshot.dispose();await assert.rejects(output,{code:'DISPOSED'});
  assert.equal(f.events.includes('artifact-dispose'),false);late.resolve({width:24,height:16});await new Promise(setImmediate);
  assert.equal(f.events.filter(x=>x==='artifact-dispose').length,1);
+});
+test('dispose during synchronous SVG output rejects the output without throwing',async()=>{
+ required();const f=fixture(),snapshot=await module.createCapturePipeline(f.stages)(f.source);
+ for(const method of ['toSvg','svgBlob']){
+  const current=method==='toSvg'?snapshot:await module.createCapturePipeline(f.stages)(f.source);
+  const pending=method==='toSvg'?current.toSvg():current.toBlob({format:'svg'});
+  assert.doesNotThrow(()=>current.dispose());
+  await assert.rejects(pending,{code:'DISPOSED'});
+  current.dispose();
+ }
+ assert.equal(f.events.filter(x=>x==='artifact-dispose').length,2);
 });
 test('removed crop and tile surfaces cannot invoke rendering or appear in metadata',async()=>{
  required();const f=fixture();let calls=0;f.renderer.render=async()=>{calls++;return {width:24,height:16};};
@@ -138,4 +150,14 @@ test('single-output layout preserves captured DPR, custom size, and allocation l
  assert.deepEqual(plans[1].contentRect,{x:0,y:0,width:30,height:30});
  await assert.rejects(snapshot.toCanvas({size:{kind:'pixels',width:20000,height:10000}}),{code:'OUTPUT_LIMIT'});
  assert.equal(plans.length,2);snapshot.dispose();
+});
+
+test('renderer allocation limits remain OUTPUT_LIMIT; unrelated failures remain ENGINE_FAILED',async()=>{
+ required();const f=fixture();let failure=new CaptureError('OUTPUT_LIMIT','output');
+ f.renderer.render=async()=>{throw failure;};
+ const snapshot=await module.createCapturePipeline(f.stages)(f.source);
+ await assert.rejects(snapshot.toCanvas({size:{kind:'scale',value:.5}}),{code:'OUTPUT_LIMIT',stage:'output'});
+ failure=new CaptureError('RESOURCE_FAILED','output');
+ await assert.rejects(snapshot.toCanvas({size:{kind:'scale',value:.5}}),{code:'ENGINE_FAILED',stage:'output'});
+ snapshot.dispose();
 });

@@ -55,9 +55,11 @@ function blobFormat(options: {format?:string;quality?:number}) {
 export function createSnapshot(artifact: VerifiedSvg, engine: SvgRenderer, meta: SnapshotMeta, release: ()=>void): InternalSnapshot {
   const source=artifact.sourceSize;
   const layoutKeys=['size','fit','align','background'];
-  let disposed=false, released=false, active:ManagedOperation|undefined;
+  let disposed=false, active:ManagedOperation|undefined;
+  let owned: {artifact:VerifiedSvg;engine:SvgRenderer;release:()=>void}|undefined={artifact,engine,release};
   const abortHandlers=new WeakMap<ManagedOperation,()=>void>();
-  const releaseOnce=()=>{if(!released){released=true;release();}};
+  // A consumer may retain a disposed snapshot; detach its large SVG and DOM owners.
+  const releaseOnce=()=>{const current=owned;if(current){owned=undefined;current.release();}};
   const begin=(options:OperationOptions)=>{
     if(disposed)throw new CaptureError('DISPOSED','output');
     if(active)throw new CaptureError('BUSY','output');
@@ -72,14 +74,14 @@ export function createSnapshot(artifact: VerifiedSvg, engine: SvgRenderer, meta:
     if(op.pending)void op.drained().then(unlock);else unlock();
   };
   const outputMeta=(mime:string|null,plan:LayoutPlan):OutputMeta=>Object.freeze({...meta,...plan.outputSize,mime,unit:plan.unit,contentRect:plan.contentRect});
-  const serialize=(plan:LayoutPlan)=>engine.serialize(artifact,plan);
+  const serialize=(plan:LayoutPlan)=>owned!.engine.serialize(owned!.artifact,plan);
   async function raster(op:ManagedOperation,plan:LayoutPlan):Promise<HTMLCanvasElement> {
     const area=plan.outputSize;
     if(![area.width,area.height].every(n=>Number.isSafeInteger(n)&&n>0&&n<=8192)||area.width*area.height>32_000_000)
       throw new CaptureError('OUTPUT_LIMIT','output');
     let canvas:HTMLCanvasElement;
-    try { canvas=await op.wait(()=>engine.render(artifact,op,plan),discardCanvas); }
-    catch {op.checkpoint();throw new CaptureError('ENGINE_FAILED','output');}
+    try { canvas=await op.wait(()=>owned!.engine.render(owned!.artifact,op,plan),discardCanvas); }
+    catch(error) {op.checkpoint();if(error instanceof CaptureError&&error.code==='OUTPUT_LIMIT')throw error;throw new CaptureError('ENGINE_FAILED','output');}
     if(canvas.width!==area.width||canvas.height!==area.height){discardCanvas(canvas);throw new CaptureError('OUTPUT_MISMATCH','output');}
     return canvas;
   }
@@ -118,6 +120,6 @@ export function createSnapshot(artifact: VerifiedSvg, engine: SvgRenderer, meta:
         {value:new Blob([serialize(plan)],{type:mime}),meta:outputMeta(mime,plan)} :
         {value:await encode({format,mime,quality},op,plan),meta:outputMeta(mime,plan)});
     },
-    dispose() {if(disposed)return;disposed=true;if(active){active.cancel('DISPOSED');if(!active.pending)releaseOnce();}else releaseOnce();},
+    dispose() {if(disposed)return;disposed=true;const op=active;if(op){op.cancel('DISPOSED');if(!op.pending)releaseOnce();}else releaseOnce();},
   });
 }

@@ -37,6 +37,8 @@ capture(target: HTMLElement, options?: CaptureOptions): Promise<CaptureSnapshot>
 
 출력은 snapshot마다 순차 실행합니다. 중첩 호출은 BUSY, dispose 이후에는 DISPOSED입니다. 출력별 signal/timeoutMs를 받습니다. 반환 Canvas와 생성한 Blob URL은 소비자가 해제합니다.
 
+dispose는 진행 중인 SVG·SVG Blob 출력도 DISPOSED로 취소하며 반복 호출할 수 있습니다. 취소를 무시하는 렌더·인코딩 작업이 남아 있으면 종료 후 내부 소유권을 해제합니다. 해제된 snapshot 객체를 보관해도 내부 SVG·렌더러·정리 콜백의 참조를 유지하지 않습니다. 이미 반환한 출력값과 meta는 유지합니다.
+
 ```js
 import {capture, CaptureError} from 'comins-capture';
 let snapshot;

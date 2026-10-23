@@ -15,6 +15,7 @@ export function createEngineSupply(original,license,version) {
   function visit(node) {
     if(ts.isFunctionDeclaration(node)) {
       const name=node.name?.text,source=node.getText(file);let updated=source;
+      if(name==='Vs')updated=replace(source,'Vf(t.element?.ownerDocument||document)','__cominsScrollbar(t.element,t)',1);
       if(name==='Qt')updated=replace(source,'t.cloneNode(!1)','__cominsShallow(t,n)',3);
       if(name==='xe')updated=replace(source,'if(L.background.has(s))','{let a=await __cominsRead(o,e);return `url("${a.data}")`}if(L.background.has(s))',1);
       if(name==='We')updated=replace(source,'await dt(Vt(U),{as:"dataURL",useProxy:r.useProxy})','await __cominsRead(Vt(U),r)',1);
@@ -25,13 +26,13 @@ export function createEngineSupply(original,license,version) {
     ts.forEachChild(node,visit);
   }
   visit(file);
-  if(edits.length!==4)throw Error('ENGINE_PATCH_CHANGED');
+  if(edits.length!==5)throw Error('ENGINE_PATCH_CHANGED');
   let code=original;
   for(const e of edits.sort((a,b)=>b.start-a.start))code=code.slice(0,e.start)+e.updated+code.slice(e.end);
-  code='// Comins modified SnapDOM 3.2.0. See LICENSE and provenance.json.\nimport {shallowClone as __cominsShallow,resolveImage as __cominsRead} from "../snapdom-extension.js";\n'+code;
+  code='// Comins modified SnapDOM 3.2.0. See LICENSE and provenance.json.\nimport {shallowClone as __cominsShallow,resolveImage as __cominsRead,collectScrollbarCss as __cominsScrollbar} from "../snapdom-extension.js";\n'+code;
   return {code,license,provenance:{component:'@zumer/snapdom',version,source:'https://registry.npmjs.org/@zumer/snapdom/-/snapdom-3.2.0.tgz',license:'MIT',
-    use:'Modified internal engine component behind the restricted static DOM public capture API.',modifiedFunctions:['Qt','We','xe','Nn'],
-    modifications:['Three shallow clone sites use a call-owned factory.','CSS background/mask and pseudo content image lookup uses a call-owned prepared resource session.','Material icon rasterization is disabled to preserve prepared text and prevent implicit font acquisition.','No stock fallback at these patched lookup sites; other original acquisition paths require adapter restrictions and verification.'],
+    use:'Modified internal engine component behind the restricted static DOM public capture API.',modifiedFunctions:['Qt','We','xe','Nn','Vs'],
+    modifications:['Scrollbar CSS uses call-owned target/inspected-node relevance filtering instead of the document-global cache; original import/media traversal and unknown rules are retained.','Three shallow clone sites use a call-owned factory.','CSS background/mask and pseudo content image lookup uses a call-owned prepared resource session.','Material icon rasterization is disabled to preserve prepared text and prevent implicit font acquisition.','No stock fallback at these patched lookup sites; other original acquisition paths require adapter restrictions and verification.'],
     originalSHA256:upstreamHash,licenseSHA256:licenseHash,candidateSHA256:digest(code),obligations:'Preserve the upstream copyright and permission notice with the distributed copy.'}};
 }
 

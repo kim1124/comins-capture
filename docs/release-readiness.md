@@ -1,5 +1,24 @@
 # 최초 출시 범위와 완료 기준
 
+## 2026-10-23 · 0.0.2 로컬 후보 현재 판정
+
+**로컬 구현·범위 한정 검증 완료, 출시 보류(`releaseReady=false`)**입니다. 공개 게시 이력이 있는 0.0.1과 구분합니다. 이번 문서 정리는 기존 최종 증거를 재사용하며 새 전체 verify·브라우저·보안 검사를 실행한 기록이 아닙니다. 승인된 local-only Contract v1.12는 미게시 상태입니다.
+
+| 0.0.2 항목 | 현재 근거와 판정 |
+|---|---|
+| 로컬 구현 및 자동 gate | 최종 verify PASS: unit 84/84·consumer 6/6·typecheck/build/licenses/docs. 제한적 SVG flow와 CSS 경계 수정 완료 |
+| 영향 브라우저 검증 | 설치 Chrome 155 DPR1·DPR2, WebKit 26.5 DPR2의 8 suite × 3 환경 = 24/24 PASS. 독립 CSS 조건 56/56 PASS. WebKit은 native Safari 증거가 아님 |
+| 로컬 사이트 UI | 한영 quick-start/single-output 4/4 PASS. 검증 응답 대체 방식이며 실제 후보 JS 20개 SHA 대조. 설치 0.0.1 업그레이드·운영 배포 미실행 |
+| 범위 한정 보안 변경분 검토 | scan `143dfad2-6ebd-4819-a7a1-008e6394d2c0`, authoritative source/config/tooling 24개 직접 검토, 확정 취약점 0건. 전체 저장소·vendor·신규 advisory·런타임 공격 감사 아님 |
+| 최종 후보 native Safari·대표 native UI 인수 | 미실행. 기존 OS 인증/automation 차단 유지. 과거 Safari 후보 통과와 현재 자동 fixture 통과로 대체하지 않음 |
+| 최종 package artifact·provenance·보안 조건 | 미실행. 최종 .tgz 생성·추출·격리 설치/소비·Gitleaks·해당 artifact provenance/OIDC 등 실제 단계 증거 확인 필요. 파일목록 dry-run은 이 인수가 아님 |
+| 원격 CI·필수 검사 | 0.0.2 최종 revision 대상 미실행. 0.0.1의 원격 PASS를 재사용하지 않음 |
+| 게시 승인 및 운영 반영 | 별도 명시 승인 필요. commit/push/실제 PR·publish/deploy 미실행 |
+
+제한된 block 문맥의 SVG 줄 배치 보완은 모든 구조·배율의 줄 배치 해결을 의미하지 않습니다. 관련 `var()`·unknown selector·지원하지 않는 CSS는 기존 strict 오류가 유지됩니다. 보안/라이선스 로컬 PASS는 최종 배포 artifact 검증을 대신하지 않으며 0.0.1의 provenance 예외는 0.0.2 승인으로 해석하지 않습니다. 상세 근거는 [최종 CSS 인수](worklogs/2026-10-23-css-boundary.md), [SVG flow 검증](worklogs/2026-10-23-svg-flow.md), [브라우저 지원 상태](guide/support.md)를 따릅니다.
+
+## 0.0.1 최초 게시 및 준비 이력
+
 갱신: 2026-10-16 KST. 2026-10-13의 0.0.1 범위 축소, 2026-10-15의 중단·미완성 코드 제거 지시, 2026-10-16의 공개 치수 자료를 통한 대체 검증 지시를 적용합니다. `private:false`, `0.0.1`은 공개 게시되었습니다. 아래 준비 이력의 미게시·보류 설명은 각 검증 당시 상태입니다. 최종 Git 마감 결과는 [문서 마감 PR #4](https://github.com/kim1124/comins-capture/pull/4)의 병합 상태와 필수 CI를 함께 확인합니다.
 
 정확한 공개 버전·latest·고정 후보와 동일한 공개 tarball·registry 서명·격리 소비·게시자 신원 검증은 통과했습니다. 게시2FA 강제·토큰 우회 차단 설정 명령과 실제 trusted publisher 재조회도 성공했습니다. 대화형 최초 게시의 provenance 부재는 유지관리자가 정확한0.0.1·고정 SHA-256에 한해 예외 승인했으며 실제 증명의 존재를 의미하지 않습니다. [게시 후 확인과 남은 종료 조건](worklogs/2026-10-16-publication-controls.md)을 현재 운영 판정으로 우선합니다. 운영 검증은 완료했으며 지원 버전·종료 기록의 실제 원격 반영 결과는 위 PR과 CI를 기준으로 확인합니다. 본문 안의 published, not closed 판정은 각 기록 시점의 상태입니다.
