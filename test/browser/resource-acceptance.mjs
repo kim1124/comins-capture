@@ -1,4 +1,5 @@
 import {capture} from '/dist/index.js';
+import {waitForResourceFrame} from '/resource-runner.mjs';
 
 const $=id=>document.getElementById(id);
 const expect=(condition,message)=>{if(!condition){const error=new Error(message);error.fixtureAssertion=true;throw error;}};
@@ -7,6 +8,7 @@ const post=(path,value)=>fetch(path,{method:'POST',headers:{'Content-Type':'appl
 const cases=['same-origin','resolver-deny','deny','origin-denied','origin-allowed','cors-blocked',
  'cssom-cross-origin','missing','invalid-image','redirect','abort','csp-connect-blocked','svg-image-rejected','inline-svg-rejected','svg-isolation'];
 const params=new URLSearchParams(location.search),runId=params.get('run');
+const diagnostic=stage=>globalThis.resourceRunnerDiagnostic?.(stage);
 const readRun=id=>fetch(`/api/runs/${id}`).then(response=>response.json());
 const phase=(id,value)=>post(`/api/runs/${id}/phase`,{phase:value});
 const assetRequests=(ledger,value)=>ledger.requests.filter(item=>item.phase===value&&item.path.startsWith('/assets/'));
@@ -67,6 +69,7 @@ async function inspectSvgDocument(run,svg,report){
  }finally{window.removeEventListener('message',onMessage);for(const item of frames)item.remove();}
 }
 async function execute(run){
+ diagnostic('setup-start');
  const report={case:run.kind,status:'failed',userAgent:navigator.userAgent,scope:'authored-loopback-public-api'};
  const root=$('fixture'),withFont=['same-origin','resolver-deny','svg-isolation'].includes(run.kind);
  const cross=['origin-denied','origin-allowed','cors-blocked','csp-connect-blocked'].includes(run.kind);
@@ -115,7 +118,7 @@ async function execute(run){
    expect(probeRequests(setupLedger,'setup').length===0,'SVG source image unexpectedly activated external content');
    report.sourceSvgImageBoundary='native-image-inactive';
   }
-  const before=root.outerHTML;await phase(run.id,'capture');
+  const before=root.outerHTML;await phase(run.id,'capture');diagnostic('capture-start');
   const options={timeoutMs:10_000,resources:{network:'same-origin'}};
   if(run.kind==='deny')options.resources={network:'deny'};
   if(run.kind==='resolver-deny'){
@@ -133,7 +136,7 @@ async function execute(run){
    result=capture(root,options).then(value=>({value}),error=>({error}));
    await until(async()=>assetRequests(await readRun(run.id),'capture').length===1,'slow fetch did not reach server');abortController.abort();
   }else result=capture(root,options).then(value=>({value}),error=>({error}));
-  const outcome=await result;
+  const outcome=await result;diagnostic('capture-complete');
   if(outcome.error){report.code=outcome.error.code;report.stage=outcome.error.stage;expect(expected===report.code,'unexpected capture rejection');}
   else{snapshot=outcome.value;expect(!expected,'capture unexpectedly accepted unsupported input');}
   expect(root.outerHTML===before,'capture modified original source');report.sourceUnchanged=true;
@@ -168,12 +171,14 @@ async function execute(run){
   report.error=error.fixtureAssertion?error.message:error.code??'UNCLASSIFIED_FIXTURE_FAILURE';
   if(error.stage)report.stage=error.stage;
  }finally{abortController?.abort();snapshot?.dispose();sheet?.remove();document.removeEventListener('securitypolicyviolation',onCsp);}
- await post(`/api/runs/${run.id}/save`,{report});return {...report,id:run.id};
+ diagnostic('save-start');report.diagnostics=globalThis.resourceRunnerDiagnostics??[];
+ await post(`/api/runs/${run.id}/save`,{report});diagnostic('save-complete');return {...report,id:run.id};
 }
 if(runId){
+ diagnostic('import-ready');
  $('run').hidden=true;$('runner-note').textContent='개별 검사 실행 중';
  const report=await execute(await readRun(runId));$('results').textContent=JSON.stringify(report,null,2);
- parent.postMessage({type:'resource-check-result',run:runId,report},location.origin);
+ diagnostic('result-sent');parent.postMessage({type:'resource-check-result',run:runId,report},location.origin);
 }else{
  $('run').onclick=async()=>{
   $('run').disabled=true;$('results').textContent='검사 시작';const results=[];
@@ -181,14 +186,14 @@ if(runId){
    const image=await imageBytes();
    for(const kind of cases){
     const run=await post('/api/runs',{kind,image});const frame=document.createElement('iframe');
-    const result=new Promise((resolve,reject)=>{
-     const cleanup=()=>{window.removeEventListener('message',receive);clearTimeout(timer);};
-     const receive=event=>{if(event.source===frame.contentWindow&&event.origin===location.origin&&event.data?.type==='resource-check-result'&&event.data.run===run.id){cleanup();resolve(event.data.report);}};
-     const timer=setTimeout(()=>{cleanup();reject(Object.assign(new Error('runner result timeout'),{fixtureAssertion:true}));},45_000);
-     window.addEventListener('message',receive);
-    });
+    const stages=[];
+    const result=waitForResourceFrame(frame,run.id,{window,origin:location.origin,onStage:event=>stages.push({...event,elapsedMs:Math.round(performance.now())})});
     frame.src=`/runner?run=${run.id}`;$('frames').replaceChildren(frame);
-    try{results.push(await result);}finally{frame.remove();}
+    try{results.push(await result);}catch(error){
+     const report={case:kind,status:'failed',error:error.code??'runner-unclassified',lastStage:error.lastStage,runnerStages:stages};
+     const ledger=await readRun(run.id);report.diagnostics=ledger.diagnostics;
+     await post(`/api/runs/${run.id}/save`,{report});results.push(report);throw error;
+    }finally{frame.remove();}
     const passed=results.filter(item=>item.status==='pass').length;
     $('results').textContent=`${passed}/${results.length} PASS; 전체 ${cases.length} 사례\n증거: output/research/resource-acceptance/${run.batchId}\n`+results.map(item=>`${item.case}: ${item.status.toUpperCase()} | capture HTTP ${item.captureRequests??'?'} | ${item.boundary??''}${item.code?` | ${item.code}`:''}${item.error?` | ${item.error}`:''}`).join('\n');
    }

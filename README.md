@@ -13,6 +13,17 @@ scale, custom size, or ISO/JIS paper size. WebP requires native encoder support.
 · [Capture website](https://comins-website.vercel.app/ko/capture/)
 
 **0.0.1 — static HTML and single-output capture.**
+
+This checkout prepares an unpublished 0.0.2 quality candidate with the same API.
+Recorded local gates passed after image, paper-clipping and raster-downscale
+fixes. The 2026-10-23 local change also corrects shrinking SVG text for eligible
+absolute-positioned single text leaves and plain block paragraphs without PNG
+embedding. The frozen extension passed 73 unit/6 consumer, all 46 distinct research
+checks and 30 Chrome/WebKit suites. Docs passed after an unpackaged-link fix; see
+[verification details and limits](docs/guide/support.md). General SVG text
+fidelity and existing WebKit external-enlargement clip defects remain unresolved.
+Native Safari validation of this revision is pending. The registry install
+below remains 0.0.1. This candidate is not release-ready.
 The Capture website is a development introduction; current contracts are in
 this repository's guides.
 
@@ -44,7 +55,7 @@ Before the version appears on npm, use the reviewed maintainer-provided tarball:
 
 ```sh
 npm install --ignore-scripts comins-capture@0.0.1
-# Offline candidate: npm install --ignore-scripts ./comins-capture-0.0.1.tgz
+# Offline candidate: npm install --ignore-scripts ./comins-capture-0.0.2.tgz
 ```
 
 Use Node.js 24 or later and ESM. A browser bundler or application-owned import
@@ -141,13 +152,42 @@ See [browser evidence and limits](docs/user/08-browser-support.md).
 
 ## Browser support and limits
 
-Chrome technical quality is conditionally accepted for the measured static
-scope. Native Safari is excluded because known shadow/clip failures remain.
-Edge, Firefox and physical mobile devices are unverified for this runtime.
-Installed browser metadata and WebKit tests do not establish native runtime
-support. Broad CSS, low-end systems, long-duration memory and full-image pixel
-equality are not guaranteed. Canvas is limited to 8192 px per side and
-32,000,000 px total.
+The October 23 bounded SVG fix passed final type/build, 66 unit and 6 consumer
+tests, licenses/docs, 46 distinct research tests and 27 Chrome/WebKit suites.
+One research server test required a permitted-environment retry after listen
+EPERM. Native Safari remains untested because fresh SafariDriver session creation
+reported remote automation disabled. This does not establish general SVG fidelity
+or whole-SVG external-enlargement quality.
+
+
+Chrome technical quality is conditionally accepted for the recorded static
+scope. On 2026-10-21 the unpublished 0.0.2 candidate passed type/build, 59 unit
+and 6 consumer tests, licenses/docs and 46 research tests. Installed Chrome
+155.0.8059.85 at DPR 1 and 2, and WebKit 26.5 at DPR 2, each passed seven bounded
+suites: engine, cold images, resources, output/lifecycle, automatic visual,
+15-case paper clipping and raster downscale (19/17/19 case groups respectively).
+
+The direct foreignObject/CSS-zoom raster path now fixes original layout into a
+1× Canvas before shrinking. Recorded regressions preserve the normal-text label,
+shadows and clipping together. The existing Chrome DPR2 path's seven PNGs and
+21 unchanged-path SVG/raster comparisons are byte-identical in focused evidence.
+Those byte comparisons belong to the October 21 revision. The October 23 change
+adds a bounded native-text SVG correction; normal-flow and complex text remain
+outside that correction. See [current support](docs/guide/support.md).
+
+Historical native Safari 27.0.1 at DPR2 passed 49 automated case groups on the
+previous renderer but still showed the A4 text-wrap defect. The new raster
+revision has not run in native Safari: CUA surface contention and disabled
+SafariDriver remote automation blocked it. Current Chrome UI source/output
+comparison and human review are also unperformed. Earlier Safari results do not
+establish support for this revision. Final package creation, remote CI and
+publication remain pending. Edge, Firefox and physical mobile devices are
+unverified for this runtime. WebKit tests do not establish native Safari support.
+Broad CSS, low-end systems, long-duration memory and full-image pixel equality
+are not guaranteed. Each Canvas is limited to 8192 px per side and 32,000,000 px
+total. The new direct raster-downscale path also checks its ceil-sized original
+Canvas; even a small final output can return OUTPUT_LIMIT when that intermediate
+exceeds either limit. This is not a global capture-input limit.
 
 ## Repository guidance
 

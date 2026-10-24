@@ -54,3 +54,16 @@ test('generated bundle hooks require an explicit session and retain normal prepa
  const s=runtime.createExtensionSession({images:[{url:'a',dataUrl:png}],cloneShallow:detached},context());
  assert.deepEqual(await runtime.resolveImage('a',{__comins:s}),{ok:true,data:png});s.assertComplete();
 });
+test('scrollbar collection is call-owned, sanitizes failure and releases the callback on dispose',()=>{
+ const source={},calls=[];
+ const a=runtime.createExtensionSession({images:[],cloneShallow:detached,scrollbarCss:n=>{calls.push(n);return 'target CSS';}},context());
+ const b=runtime.createExtensionSession({images:[],cloneShallow:detached,scrollbarCss:()=>''},context());
+ assert.equal(runtime.collectScrollbarCss(source,{__comins:a}),'target CSS');
+ assert.equal(runtime.collectScrollbarCss(source,{__comins:b}),'');assert.deepEqual(calls,[source]);
+ a.dispose();assert.throws(()=>runtime.collectScrollbarCss(source,{__comins:a}),{code:'DISPOSED'});assert.equal(calls.length,1);
+ const c=new AbortController(),cancelled=runtime.createExtensionSession({images:[],cloneShallow:detached,scrollbarCss:()=>{throw Error('must not run');}},context(c));
+ c.abort();assert.throws(()=>cancelled.collectScrollbarCss(source),{code:'ABORTED'});
+ const failed=runtime.createExtensionSession({images:[],cloneShallow:detached,scrollbarCss:()=>{throw Error('private');}},context());
+ assert.throws(()=>failed.collectScrollbarCss(source),e=>e.code==='ENGINE_FAILED'&&!e.message.includes('private'));
+ assert.throws(()=>failed.assertComplete(),{code:'ENGINE_FAILED'});
+});

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>용지 출력 중첩 clip 내용 회귀</title>
+<!-- Preserve the representative visual-acceptance invoice hierarchy and styles. -->
+<style>
+  body { margin:24px; color:#17263d; font:14px system-ui,sans-serif; background:#eef2f6; }
+  h1 { margin:0 0 12px; font-size:22px; }
+  .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  button,select,input,textarea { font:inherit; }
+  button { padding:7px 12px; }
+  .screens { display:grid; grid-template-columns:620px 620px; gap:24px; width:max-content; }
+  .screens.single { grid-template-columns:620px; }
+  .panel h2 { height:22px; margin:0 0 8px; font-size:15px; }
+  .stage { width:620px; height:560px; background:white; outline:1px solid #8796ad; }
+  .stage canvas { display:block; width:620px; height:560px; }
+  .invoice, .invoice * { box-sizing:border-box; }
+  .invoice { width:620px; height:560px; padding:20px; overflow:hidden; border:1px solid #ccd6e3; background:#fff; color:#14243b; font:14px/1.4 system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; }
+  .invoice h3,.invoice h4,.invoice p { margin:0; }
+  .invoice-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .invoice-header h3 { font-size:24px; letter-spacing:-.7px; }
+  .invoice-header .english { font:12px/1.5 Georgia,serif; color:#5b6c80; }
+  .badge { display:inline-block; padding:5px 11px; border:1px solid #b9d1fa; border-radius:14px; background:#edf4ff; color:#2055b1; font-size:12px; }
+  .metrics { display:flex; gap:10px; margin-bottom:16px; }
+  .metric { flex:1; padding:10px 12px; border:1px solid #e0e6ef; border-radius:7px; background:#f7f9fc; box-shadow:0 2px 4px #14243b12; }
+  .metric small { display:block; color:#617389; font-size:11px; }
+  .metric strong { display:block; margin-top:3px; font-size:19px; }
+  .invoice table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px; margin-bottom:16px; }
+  .invoice th,.invoice td { border:1px solid #d8e1ec; padding:9px 10px; }
+  .invoice th { background:#eaf0f8; text-align:left; font-weight:600; }
+  .invoice th:nth-child(1) { width:42%; }
+  .invoice th:nth-child(2) { width:15%; }
+  .invoice .numeric { text-align:right; font-variant-numeric:tabular-nums; }
+  .invoice tbody tr:nth-child(2) { background:#fafbfd; }
+  .invoice tfoot { background:#f0f5fd; font-weight:700; }
+  .bottom { display:flex; gap:16px; height:116px; }
+  .notes { width:280px; flex-shrink:0; }
+  .notes h4 { font-size:13px; margin-bottom:6px; }
+  .notes ul { margin:0; padding:0; list-style:none; }
+  .notes li { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:12px; }
+  .notes li span:first-child { width:8px; height:8px; border-radius:50%; background:#2467d8; }
+  .notes li:nth-child(2) span:first-child { background:#26967c; }
+  .notes li:nth-child(3) span:first-child { background:#d48620; }
+  .clip-outer { flex:1; height:108px; overflow:hidden; border:2px solid #8099bb; border-radius:12px; padding:8px; background:#e7f0fd; box-shadow:inset 0 1px 4px #344d6630; }
+  .clip-inner { position:relative; width:100%; height:84px; overflow:hidden; border:1px solid #acc2e4; border-radius:7px; background:#fff; }
+  .clip-stripe { position:absolute; left:-18px; top:49px; width:270px; height:20px; background:#2c6dd2; transform:rotate(-12deg); }
+  .clip-circle { position:absolute; right:-14px; top:-13px; width:62px; height:62px; border:6px solid #f4be55; border-radius:50%; background:#fff5d8; }
+  .clip-label { position:absolute; left:9px; top:12px; font-size:12px; font-weight:600; }
+  .invoice-footer { display:flex; justify-content:space-between; margin-top:18px; padding-top:9px; border-top:1px solid #d8e1ec; color:#617389; font-size:10px; }
+  .evidence { max-width:1264px; margin-top:18px; }
+  .evidence pre { padding:12px; background:white; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .evidence p { line-height:1.5; }
+  .review { display:grid; gap:8px; max-width:700px; }
+  .review label { display:grid; gap:4px; }
+  .review textarea { height:72px; }
+  .boundary-fixtures { position:absolute; left:24px; top:1600px; }
+  .boundary-fixtures > div { width:80px; height:40px; }
+  .sticky-example { position:sticky; top:0; }
+  .scroll-example { overflow:auto; }
+  .scroll-example > div { width:160px; height:100px; }
+
+.clip-label-marker { display:inline-block; width:8px; height:8px; margin-right:4px; background:#c634a8; }
+#outputs { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+#outputs figure { margin:0; }
+#outputs img { display:block; max-width:620px; max-height:700px; object-fit:contain; object-position:top left; }
+</style>
+<h1>용지 출력 중첩 clip 내용 회귀</h1>
+<p>같은 대표 명세서의 라벨 표식·사선·원 내부와 clip 밖 색을 독립 기하 좌표에서 검사합니다. 글꼴 픽셀 exact 일치는 검사하지 않습니다.</p>
+<div id="source"><article class="invoice" lang="ko">
+      <header class="invoice-header"><div><h3>서비스 이용 명세서</h3><p class="english" lang="en">Service statement · October 2026</p></div><span class="badge">검토 완료</span></header>
+      <div class="metrics"><div class="metric"><small>이번 달 이용액</small><strong>₩ 128,400</strong></div><div class="metric"><small>처리한 요청</small><strong>1,024건</strong></div><div class="metric"><small>응답 품질</small><strong>99.8%</strong></div></div>
+      <table><thead><tr><th>항목 / Description</th><th class="numeric">수량</th><th class="numeric">단가</th><th class="numeric">금액</th></tr></thead><tbody>
+        <tr><td>기본 서비스 · Core</td><td class="numeric">3</td><td class="numeric">24,000</td><td class="numeric">72,000</td></tr>
+        <tr><td>저장 공간 · Storage</td><td class="numeric">2</td><td class="numeric">18,000</td><td class="numeric">36,000</td></tr>
+        <tr><td>추가 요청 · API calls</td><td class="numeric">1</td><td class="numeric">8,727</td><td class="numeric">8,727</td></tr>
+      </tbody><tfoot><tr><td colspan="3">부가세 포함 합계</td><td class="numeric">128,400</td></tr></tfoot></table>
+      <div class="bottom"><section class="notes"><h4>처리 상태 / Processing status</h4><ul>
+        <li><span></span><span id="duplicate-fixture">접수 완료 · Received</span></li>
+        <li><span></span><span id="duplicate-fixture">검증 완료 · Verified</span></li>
+        <li><span></span><span>보관 완료 · Archived</span></li>
+      </ul></section><div class="clip-outer"><div class="clip-inner"><div class="clip-stripe"></div><div class="clip-circle"></div><span class="clip-label"><i class="clip-label-marker" aria-hidden="true"></i>중첩 clip · border</span></div></div></div>
+      <footer class="invoice-footer"><span>한글 가나다 · English Aa Bb · 0123456789</span><span>STATEMENT 2026-10 · 001</span></footer>
+    </article></div>
+<pre id="results">실행 중</pre><div id="outputs"></div>
+<script type="module" src="/paper-clip-regression.mjs"></script></html>

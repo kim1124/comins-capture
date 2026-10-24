@@ -1,5 +1,24 @@
 # 최초 출시 범위와 완료 기준
 
+## 2026-10-24 · 0.0.2 로컬 후보 현재 판정
+
+**범위 한정 검증 완료, 출시 보류(`releaseReady=false`)**입니다. 기준은 [Draft PR #5](https://github.com/kim1124/comins-capture/pull/5)의 head `7d1bf97433edd1d33bcccd43f0a649742c07558e`이며, 후속 native fixture·작업 리포트·본 문서의 로컬 미커밋 변경은 이 PR/CI에 포함되지 않았습니다. 공개 0.0.1 게시 이력과 구분하며 승인된 local-only Contract v1.12는 미게시 상태입니다. 이번 문서 갱신은 아래 기록을 재사용하고 문서 검사만 수행합니다.
+
+| 0.0.2 항목 | 현재 근거와 판정 |
+|---|---|
+| 로컬 구현 및 자동 gate | fixture 보완 후 verify PASS: unit 84/84·consumer 6/6·typecheck/build/licenses/docs. 제품 src/dist/package는 불변 |
+| 영향 브라우저 검증 | 기존 Chrome155 DPR1·DPR2/WebKit26.5 DPR2의 24/24 suite·독립 CSS56/56 PASS는 기록 재사용. 공통 fixture 보완 후 native-downscale만 Chrome DPR1=19/19·DPR2=17/17, WebKit DPR2=19/19 각1회 PASS |
+| 로컬 사이트 UI | 한영 quick-start/single-output 4/4 PASS는 기록 재사용. 검증 응답 대체 방식이며 경로별 후보 JS20개 SHA 대조. 설치0.0.1 업그레이드·운영 배포 미실행 |
+| 범위 한정 보안 변경분 검토 | scan `143dfad2-6ebd-4819-a7a1-008e6394d2c0`, authoritative source/config/tooling24개 직접 검토, 확정 취약점0건의 기록. 전체 저장소·vendor·신규 advisory·런타임 공격 감사 아님 |
+| native Safari·대표 출력/UI | 실제 Safari27.0.1·native DPR2·1512×859 한정11 suite/175조건 PASS: 기존10 suite 재사용+수정한 native-downscale19/19 재실행. 대표 출력·UI는 제한적 질적 관찰이며 source 픽셀 동등·사용자 직접 인수·범용 heap 누수 부재는 미확립 |
+| package artifact·provenance·보안 조건 | 기준7d1bf974의 로컬 진단83파일은 exact bytes·추출본 silent Gitleaks·license·격리 소비/SSR/API/types PASS. 최초DNS 환경 실패 후 허용 환경PASS를 구분하고 fixture 보완 후 재pack0회. canonical workflow artifact·npm/OIDC provenance·identity·registry closure는 미완료 |
+| 원격 CI·필수 검사 | PR5 head7d1bf974의 [CI39978904763](https://github.com/kim1124/comins-capture/actions/runs/39978904763)에서 Package·Sensitive data SUCCESS. 후속 로컬 미커밋3파일은 미포함이며 최종 revision의 CI는 별도 확인 필요 |
+| 게시 승인 및 운영 반영 | 기존67파일 commit/push·OPEN Draft PR5 생성 완료, 미병합. 후속 로컬 변경은 미커밋. merge/publish/deploy·운영 반영은 미실행이며 별도 명시 승인 필요 |
+
+제한된 block 문맥의 SVG 줄 배치 보완은 모든 구조·배율의 줄 배치 해결을 의미하지 않습니다. 관련 `var()`·unknown selector·지원하지 않는 CSS는 기존 strict 오류가 유지됩니다. native/로컬 진단 artifact PASS는 canonical artifact·게시 인수를 대신하지 않으며 0.0.1의 provenance 예외는 0.0.2에 승계하지 않습니다. 상세 근거는 [native Safari 및 fixture 후속](worklogs/2026-10-24-native-safari.md), [최종 CSS 인수](worklogs/2026-10-23-css-boundary.md), [SVG flow 검증](worklogs/2026-10-23-svg-flow.md), [브라우저 지원 상태](guide/support.md)를 따릅니다.
+
+## 0.0.1 최초 게시 및 준비 이력
+
 갱신: 2026-10-16 KST. 2026-10-13의 0.0.1 범위 축소, 2026-10-15의 중단·미완성 코드 제거 지시, 2026-10-16의 공개 치수 자료를 통한 대체 검증 지시를 적용합니다. `private:false`, `0.0.1`은 공개 게시되었습니다. 아래 준비 이력의 미게시·보류 설명은 각 검증 당시 상태입니다. 최종 Git 마감 결과는 [문서 마감 PR #4](https://github.com/kim1124/comins-capture/pull/4)의 병합 상태와 필수 CI를 함께 확인합니다.
 
 정확한 공개 버전·latest·고정 후보와 동일한 공개 tarball·registry 서명·격리 소비·게시자 신원 검증은 통과했습니다. 게시2FA 강제·토큰 우회 차단 설정 명령과 실제 trusted publisher 재조회도 성공했습니다. 대화형 최초 게시의 provenance 부재는 유지관리자가 정확한0.0.1·고정 SHA-256에 한해 예외 승인했으며 실제 증명의 존재를 의미하지 않습니다. [게시 후 확인과 남은 종료 조건](worklogs/2026-10-16-publication-controls.md)을 현재 운영 판정으로 우선합니다. 운영 검증은 완료했으며 지원 버전·종료 기록의 실제 원격 반영 결과는 위 PR과 CI를 기준으로 확인합니다. 본문 안의 published, not closed 판정은 각 기록 시점의 상태입니다.

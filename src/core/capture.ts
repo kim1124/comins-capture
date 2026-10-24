@@ -1,4 +1,4 @@
-import type { EngineAdapter, EngineArtifact, SvgRenderer } from '../engine/contract.js';
+import type { EngineAdapter, EngineArtifact, SvgRenderer, PlainTextRun } from '../engine/contract.js';
 import { CaptureError, type CaptureErrorCode } from '../errors.js';
 import { createOperation, type ManagedOperation, type OperationOptions } from '../lifecycle/operation.js';
 import { resolveResources, resourceOptions, type ResourceEntry, type ResourceOptions, type ResolvedResources } from '../resources/resolve.js';
@@ -18,13 +18,27 @@ export interface CaptureStages {
   engine: EngineAdapter;
   renderer: SvgRenderer;
   /** Must verify every resource insertion and sanitize/validate active SVG content. No default pass. */
-  verify(artifact: EngineArtifact, inspection: SourceInspection, resources: ResolvedResources, context: ManagedOperation): Promise<Verification & {readonly svg: string}>;
+  verify(artifact: EngineArtifact, inspection: SourceInspection, resources: ResolvedResources, context: ManagedOperation): Promise<Verification & {readonly svg: string;readonly textRuns?:readonly PlainTextRun[]}>;
 }
 export interface CaptureOptions extends OperationOptions {
   ready?: (context: {signal: AbortSignal})=>Promise<void>;
   resources?: ResourceOptions;
 }
 const documents=new WeakSet<Document>();
+function immutableTextRuns(runs:readonly PlainTextRun[]|undefined):readonly PlainTextRun[]|undefined {
+  if(runs===undefined)return undefined;
+  const fail=():never=>{throw new CaptureError('RESOURCE_UNVERIFIABLE','capture');};
+  if(!Array.isArray(runs))return fail();
+  return Object.freeze(runs.map(run=>{
+    if(!run||typeof run.ref!=='string'||!/^n\d+$/.test(run.ref)||typeof run.text!=='string'||!run.text||![run.width,run.height].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>0)||!Array.isArray(run.styles))return fail();
+    if(run.position!==undefined&&!['absolute','static','relative'].includes(run.position))return fail();
+    const styles=run.styles.map((pair:readonly [string,string])=>{
+      if(!Array.isArray(pair)||pair.length!==2||pair.some(v=>typeof v!=='string'))return fail();
+      return Object.freeze([pair[0],pair[1]] as const);
+    });
+    return Object.freeze({ref:run.ref,text:run.text,width:run.width,height:run.height,...(run.position?{position:run.position}:{}),styles:Object.freeze(styles)});
+  }));
+}
 /** Internal coordinator used by the restricted static DOM factory; wider G1/G3 gates remain. */
 export function createCapturePipeline(stages: CaptureStages) {
   return async function capture(source:HTMLElement,options:CaptureOptions={}):Promise<InternalSnapshot> {
@@ -57,7 +71,8 @@ export function createCapturePipeline(stages: CaptureStages) {
       if(artifact.sourceSize.width!==size.width||artifact.sourceSize.height!==size.height)throw new CaptureError('OUTPUT_MISMATCH','capture');
       const verification=await run('RESOURCE_UNVERIFIABLE',()=>stages.verify(artifact!,inspection!,resources!,op));
       if(!verification||typeof verification.svg!=='string'||!verification.svg.trim()||verification.status!=='complete'||!Array.isArray(verification.diagnostics))throw new CaptureError('RESOURCE_UNVERIFIABLE','capture');
-      const verified=Object.freeze({svg:verification.svg,sourceSize:Object.freeze({...size})});
+      const textRuns=immutableTextRuns(verification.textRuns);
+      const verified=Object.freeze({svg:verification.svg,sourceSize:Object.freeze({...size}),...(textRuns?{textRuns}:{})});
       await run('SOURCE_CHANGED',()=>inspection!.assertUnchanged());
       op.checkpoint();
       const meta=Object.freeze({snapshotId:crypto.randomUUID(),capturedDpr,sourceRect:Object.freeze({x:0,y:0,...size}),startedAt,completedAt:Date.now(),status:verification.status,diagnostics:sanitizedDiagnostics(verification.diagnostics)});

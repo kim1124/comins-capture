@@ -47,10 +47,18 @@ const svg = await snapshot.toSvg({size:{kind:'paper',name:'A4'}});
 
 ## 한도·소유권
 
-단일 Canvas는 한 변 8192 px·면적 32,000,000 px 이내입니다. 초과 시 OUTPUT_LIMIT이며 자동 축소·분할하지 않습니다. 반환 Canvas와 소비자가 생성한 Blob URL은 소비자가 해제합니다.
+각 Canvas는 한 변 8192 px·면적 32,000,000 px 이내입니다. 초과 시 OUTPUT_LIMIT이며 자동 축소·분할하지 않습니다. 기존 direct foreignObject/XHTML div·CSS zoom 경로에서 두 축 모두 1 이하이며 적어도 한 축이 1 미만인 래스터 출력은 원본을 배율1 Canvas로 확정한 뒤 축소합니다. 이때 원본의 소수 크기를 각각 올림한 중간 Canvas에도 같은 한도를 할당 전에 검사하므로 최종 출력이 작아도 OUTPUT_LIMIT일 수 있습니다. 실제 이 분기에서만 적용하며 capture 입력 전체의 새 제한은 아닙니다. 소수 원본 크기는 최종 source crop에 유지하고 임시 Canvas는 작업별 finally에서 해제합니다. 기존 reciprocal 경로·실효 배율1·확대는 유지합니다. SVG 축소는 아래 제한된 텍스트 보정을 적용하며, 일반 텍스트 전체의 줄 배치 보존을 보증하지 않습니다. 반환 Canvas와 소비자가 생성한 Blob URL은 소비자가 해제합니다.
 
 출력 meta는 캡처 meta에 width/height/unit(px·css-px·mm), mime, contentRect를 추가합니다. sourceRect는 원본 CSS 영역입니다. crop·totalWidth·totalHeight·타일 메타데이터는 제거했습니다.
 
+## SVG 축소의 제한된 텍스트 보존
+
+2026-10-23 로컬 후보는 직접 foreignObject/CSS zoom SVG 경로의 실효 배율이 두 축 모두 1 미만일 때, 적격한 절대 배치 단일 텍스트와 일반 block의 단일 Text 문단을 원본 배율로 처리한 뒤 기하 축소합니다. mm 출력은 CSS px 환산 후 배율을 판정합니다. 컨테이너의 그림자·클리핑 경로는 유지하며 PNG를 내장하거나 글꼴 크기·폭을 변경하거나 nowrap을 강제하지 않습니다.
+
+적격 범위는 패딩·테두리·요소 자식·생성 콘텐츠·텍스트 효과가 없는 단순 LTR·가로쓰기 텍스트입니다. 절대 배치는 원본 한 줄에 한정하며, 일반 block은 static/relative의 단일 Text 노드로 된 한 줄·여러 줄 문단을 허용합니다. 일반 block은 외부 조상까지 보수적인 block 문맥을 요구하며 flex/grid·table·inline·flow-root·float·다단 등은 보정하지 않습니다. 캡처 내부의 float·음수 margin·박스 밖 효과나 비조상 요소와의 겹침 등 페인트 순서가 달라질 수 있는 문맥도 보정하지 않습니다. 이 조건은 일반 CSS의 효과 영역을 계산하는 기능이 아니며 검증한 제한적 block 문맥만 대상으로 합니다. 혼합 인라인·RTL·원본 transform/zoom 등 비적격 구조에도 기존 경로를 유지합니다. 검사 예산을 초과하면 일반 block 보정을 생략하며 기존 capture 입력 제한은 변경하지 않습니다. fallback 경로의 기존 줄 재배치까지 해결하는 것은 아닙니다. 일반 문단은 원본 used 크기를 유지하고, static의 무시되던 inset을 활성화하지 않으며, 캡처 중 전체 줄 rect 변화도 검사합니다. 원본 배치·글꼴 속성은 캡처 시 불변 데이터로 보관하므로 출력 시 원본 DOM을 다시 읽지 않습니다. 기본 SVG·실효 배율 1·확대·기존 reciprocal 경로·래스터 출력은 이 텍스트 보정의 대상이 아닙니다.
+
+배율 문자열의 CSSOM 반올림을 피하되, 브라우저 내부 수치 연산까지 모든 배율에서 정확하게 상쇄된다고 보장하지 않습니다. 이는 일부 텍스트 재배치의 보완이며 일반 HTML 전체의 완전 벡터 변환이 아닙니다. WebKit에서 기존 SVG를 외부에서 다시 확대할 때 발생하는 그림자·clip 문제도 별도로 남습니다. 실제 지원·검증 범위는 [지원 상태](support.md)를 따릅니다.
+
 ## 검증 경계
 
-2026-10-15 정리 후 고정 후보를 실제 Chrome 154.0.8037.98에서 검증했습니다. 기본·2배·custom·A4·JIS B4와 SVG의 치수·MIME·decode 및 대표 원본/출력 비교를 확인했습니다. Safari의 과거 그림자·clip 재현 실패는 해결 판정을 하지 않았으며 정식 지원에서 제외합니다. 현재 실행 결과와 잔여 조건은 [지원 상태](support.md)를 따릅니다.
+2026-10-15 정리 후 고정 후보를 실제 Chrome 154.0.8037.98에서 검증했습니다. 기본·2배·custom·A4·JIS B4와 SVG의 치수·MIME·decode 및 대표 원본/출력 비교를 확인했습니다. 당시 Safari는 그림자·clip 재현 실패로 정식 지원에서 제외했습니다. 0.0.2 로컬 후보의 해당 결함 보완과 native macOS Safari 27.0.1 한정 검증 결과는 [지원 상태](support.md)를 따릅니다.

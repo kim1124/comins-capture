@@ -35,6 +35,11 @@ There is no failure/partial-success option.
 | toBlob(options?) | `Promise<CaptureOutput<Blob>>`; PNG default, JPEG/WebP/SVG selectable |
 | dispose() | Idempotent release and output cancellation |
 
+Disposal also rejects in-flight synchronous SVG/SVG-Blob output with DISPOSED.
+Internal owners remain until cancellation-ignoring work settles, then the
+snapshot drops its SVG, renderer and cleanup references even if the consumer
+retains the disposed snapshot. Previously returned outputs and metadata remain valid.
+
 CaptureOutput is `{value, meta}`. Output meta adds width/height/unit, MIME and
 contentRect. Methods accept signal/timeoutMs and execute sequentially per
 snapshot. BUSY rejects overlap; DISPOSED rejects use after release. The caller

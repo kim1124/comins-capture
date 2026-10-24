@@ -1,3 +1,4 @@
+import {collectScrollbarCss} from '../engine/scrollbar-css.js';
 import type {DomInspection,DomNode} from './inspect.js';
 import type {ResolvedResources} from '../resources/resolve.js';
 import type {ManagedOperation} from '../lifecycle/operation.js';
@@ -41,7 +42,10 @@ export async function prepareDom(inspection:DomInspection,resources:ResolvedReso
     for(const [key,value] of Object.entries({'font-family':f.family,'font-style':f.style,'font-weight':f.weight,'font-stretch':f.stretch,'unicode-range':f.range,src}))if(value)rule.style.setProperty(key,value);
     fonts.push(rule.cssText);
   }
-  const session=createExtensionSession({images:[...urls].filter(([,data])=>data.startsWith('data:image/')).map(([url,dataUrl])=>({url,dataUrl})),cloneShallow(source){
+  const session=createExtensionSession({scrollbarCss(source){
+    if(source!==inspection.root)throw new CaptureError('ENGINE_FAILED','capture');
+    return collectScrollbarCss(source,inspection.nodes.map(node=>node.element),()=>op.checkpoint());
+  },images:[...urls].filter(([,data])=>data.startsWith('data:image/')).map(([url,dataUrl])=>({url,dataUrl})),cloneShallow(source){
     if(source.nodeType!==1)throw new CaptureError('UNSUPPORTED_CONTENT','capture');
     const original=source as HTMLElement,clone=doc.createElement(original.localName);
     for(const attr of original.attributes)if(['id','class','title','lang','dir','colspan','rowspan','scope','span','start','reversed','type','alt','width','height'].includes(attr.name))clone.setAttribute(attr.name,attr.value);

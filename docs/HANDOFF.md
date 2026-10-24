@@ -1,5 +1,17 @@
 # Comins Capture 인계
 
+## 2026-10-23 · 0.0.2 로컬 후보 인수 요약
+
+현재 checkout의 0.0.2는 로컬 미게시 후보이며 `releaseReady=false`입니다. 아래 0.0.1 게시·원격 운영 기록은 해당 버전의 역사로 보존합니다. 이번 후보의 원격 CI·게시·운영 배포는 수행하지 않았고, 승인된 local-only Comins Contract v1.12도 미게시 상태입니다.
+
+제한된 일반 block 텍스트의 SVG 축소 줄 배치 보완, 래스터 축소·이미지 paint 준비·dispose 개선과 문서 전역 vendor scrollbar 계열 CSS 유입 차단을 포함합니다. CSS 수정은 무관 확정 규칙만 제외하며 관련 변수·unknown CSS의 기존 strict 거부를 유지합니다. 일반 HTML의 모든 줄 배치·임의 CSS·브라우저 지원을 보장하지 않습니다. 상세 근거는 [SVG flow 기록](worklogs/2026-10-23-svg-flow.md), [CSS 경계 최종 인수 기록](worklogs/2026-10-23-css-boundary.md), [지원 상태](guide/support.md)를 따릅니다.
+
+최종 CSS 후보의 기록된 검증은 verify(unit 84/84·consumer 6/6·타입·빌드·라이선스·문서) PASS, 독립 CSS 56/56·영향 suite 24/24 PASS입니다. Chrome 155 DPR1·DPR2와 WebKit 26.5 DPR2의 한정 자동 증거이며 native Safari 인증이 아닙니다. 사이트 한영 4개 UI는 검증 브라우저 응답만 후보 모듈로 대체하여 PASS했고 경로별 실제 JS 20개 SHA를 대조했습니다. 원본 사이트의 설치된 0.0.1 업그레이드·운영 배포는 수행하지 않았습니다. 보안 변경분 검사는 직접 검토한 authoritative source/config/tooling 24개에서 확정 취약점 0건이며 전체 저장소 보증이 아닙니다.
+
+다음 단계는 최종 후보의 native Safari·대표 native UI 인수, 최종 package artifact·provenance·보안 조건의 실제 확인, 해당 revision의 원격 CI, 명시적 publish 승인입니다. native Safari는 기존 OS 인증/automation 차단으로 미실행이고 이번 단계에서는 재시도하지 않았습니다. 0.0.1의 artifact·CI·provenance 예외를 0.0.2에 승계하지 않습니다. Git stage/commit/push·실제 PR·pack artifact·publish/deploy는 이 문서 후속 범위에 포함하지 않습니다.
+
+## 0.0.1 게시 및 인계 이력
+
 갱신: 2026-10-16 KST. 최초 배포는 정적 HTMLElement·단일 출력·배율/custom/ISO/JIS 용지 범위입니다. [출시 조건](release-readiness.md)과 현재 docs/guide를 우선합니다.
 
 ## 최신 원격 상태

@@ -14,8 +14,14 @@ export interface OperationContext {
 export interface EngineAdapter {
   capture(source: HTMLElement, context: OperationContext): Promise<EngineArtifact>;
 }
+/** Primitive source text geometry; no live DOM owner crosses verification. */
+export interface PlainTextRun {
+  readonly ref:string;readonly text:string;readonly width:number;readonly height:number;
+  readonly position?:'absolute'|'static'|'relative';
+  readonly styles:readonly (readonly [string,string])[];
+}
 /** Output rendering accepts only the immutable value returned by verification. */
-export interface VerifiedSvg { readonly svg: string; readonly sourceSize: Readonly<Size> }
+export interface VerifiedSvg { readonly svg: string; readonly sourceSize: Readonly<Size>;readonly textRuns?:readonly PlainTextRun[] }
 export interface SvgRenderer {
   serialize(output: VerifiedSvg, layout: LayoutPlan): string;
   render(output: VerifiedSvg, context: OperationContext, layout: LayoutPlan): Promise<HTMLCanvasElement>;

@@ -1,6 +1,6 @@
 {
   "name": "comins-capture",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": false,
   "description": "Framework-independent static HTML capture with single-image and ISO/JIS paper output",
   "type": "module",

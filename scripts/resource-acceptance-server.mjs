@@ -1,7 +1,7 @@
 import {createServer} from 'node:http';
 import {readFile,writeFile,mkdir,realpath} from 'node:fs/promises';
 import {resolve,join,sep,extname} from 'node:path';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {fontData} from '../test/browser/font-fixture.mjs';
 
 // Only authored fixtures and built files are exposed. Both origins bind loopback.
@@ -21,8 +21,8 @@ function csp(kind){
  const connect=kind==='csp-connect-blocked'?"'self'":`'self' ${assetOrigin}`;
  return `default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' ${assetOrigin}; img-src 'self' data: blob: ${assetOrigin}; font-src 'self' data: ${assetOrigin}; connect-src ${connect}; frame-src 'self' blob:; base-uri 'none'; object-src 'none'`;
 }
-async function body(req){
- let text='',length=0;for await(const chunk of req){length+=chunk.length;if(length>2_000_000)throw Error('Too large');text+=chunk;}
+async function body(req,limit=2_000_000){
+ let text='',length=0;for await(const chunk of req){length+=chunk.length;if(length>limit)throw Error('Too large');text+=chunk;}
  return JSON.parse(text);
 }
 function ledger(run,req,path,serverOrigin){
@@ -60,31 +60,56 @@ async function handler(req,res,serverOrigin){
    return send(200,run.image,'image/png',headers);
   }
   if(serverOrigin!==origin)return send(404,'Not found');
+  const runner=runs.get(url.searchParams.get('run'));
+  if(path==='/runner'&&runner){
+   const event={stage:'document-request',elapsedMs:Date.now()-runner.startedAt};runner.diagnostics.push(event);
+   res.on('finish',()=>runner.diagnostics.push({stage:'document-response',status:res.statusCode,elapsedMs:Date.now()-runner.startedAt}));
+   req.on('aborted',()=>runner.diagnostics.push({stage:'document-aborted',elapsedMs:Date.now()-runner.startedAt}));
+  }
   if(req.method==='POST'){
    if(req.headers.origin!==origin||req.headers['x-resource-check']!=='1')return send(403,'Forbidden');
-   const input=await body(req);
+   const input=await body(req,path==='/api/browser-evidence'?40_000_000:2_000_000);
+   if(path==='/api/browser-evidence'){
+    if(!['engine-boundary','image-boundary'].includes(input.kind)||!input.report||typeof input.report!=='object'||JSON.stringify(input.report).length>50_000||!input.files||typeof input.files!=='object'||Object.keys(input.files).length>96)return send(400,'Invalid authored evidence');
+    const files=[];
+    for(const [name,value] of Object.entries(input.files)){
+     if(!/^(raw|current|previous|public)(?:-[12])?(?:-sync)?(?:-plain)?(?:(?:-immediate|-delayed)(?:-three|-five|-three-again)?|-before|-original(?:-task|-delayed)?|-task)?\.(svg|png)$/.test(name)||typeof value!=='string'||value.length>7_000_000)return send(400,'Invalid authored evidence');
+     const bytes=name.endsWith('.png')&&value.startsWith('data:image/png;base64,')?Buffer.from(value.slice(22),'base64'):name.endsWith('.svg')&&value.includes('<svg')?Buffer.from(value):undefined;
+     if(!bytes)return send(400,'Invalid authored evidence');files.push({name,bytes});
+    }
+    const id=randomUUID(),folder=join(directory,`${input.kind}-${id}`);await mkdir(folder);
+    const hashes={};for(const {name,bytes} of files){await writeFile(join(folder,name),bytes);hashes[name]=createHash('sha256').update(bytes).digest('hex');}
+    await writeFile(join(folder,'report.json'),JSON.stringify({...input.report,hashes},null,2));
+    return send(200,JSON.stringify({directory:`output/research/resource-acceptance/${batchId}/${input.kind}-${id}`,hashes}),'application/json');
+   }
    if(path==='/api/runs'){
     if(!cases.has(input.kind)||!Array.isArray(input.image)||!input.image.length||input.image.length>100_000||input.image.some(n=>!Number.isInteger(n)||n<0||n>255))return send(400,'Invalid fixture');
-    const run={id:randomUUID(),kind:input.kind,image:Buffer.from(input.image),phase:'setup',requests:[],svg:undefined};runs.set(run.id,run);
+    const run={id:randomUUID(),kind:input.kind,image:Buffer.from(input.image),phase:'setup',requests:[],diagnostics:[],startedAt:Date.now(),svg:undefined};runs.set(run.id,run);
     return send(200,JSON.stringify({id:run.id,kind:run.kind,origin,assetOrigin,batchId}),'application/json');
    }
-   const match=path.match(/^\/api\/runs\/([a-f0-9-]{36})\/(phase|svg|save)$/),run=match&&runs.get(match[1]);
+   const match=path.match(/^\/api\/runs\/([a-f0-9-]{36})\/(phase|svg|save|diagnostic)$/),run=match&&runs.get(match[1]);
    if(!run)return send(404,'Not found');
-   if(match[2]==='phase'){
+   if(match[2]==='diagnostic'){
+    if(typeof input.stage!=='string'||!/^[a-z-]{1,40}$/.test(input.stage)||!Number.isFinite(input.elapsedMs)||input.elapsedMs<0)return send(400,'Invalid diagnostic');
+    const event={stage:input.stage,elapsedMs:input.elapsedMs};
+    if(typeof input.directive==='string'&&/^[a-z-]{1,40}$/.test(input.directive))event.directive=input.directive;
+    if(run.diagnostics.length<80)run.diagnostics.push(event);
+    await writeFile(join(directory,`${run.id}.diagnostics.json`),JSON.stringify({kind:run.kind,diagnostics:run.diagnostics},null,2));
+   }else if(match[2]==='phase'){
     if(!['setup','capture','recovery','isolation','control'].includes(input.phase))return send(400,'Invalid phase');run.phase=input.phase;
    }else if(match[2]==='svg'){
     if(typeof input.svg!=='string'||input.svg.length>1_000_000)return send(400,'Invalid SVG');run.svg=input.svg;
     await writeFile(join(directory,`${run.id}.svg`),run.svg);
    }else{
     if(!input.report||typeof input.report!=='object')return send(400,'Invalid report');
-    const report={...input.report,id:run.id,kind:run.kind,requests:run.requests,batchId};
+    const report={...input.report,id:run.id,kind:run.kind,requests:run.requests,diagnostics:run.diagnostics,batchId};
     await writeFile(join(directory,`${run.id}.json`),JSON.stringify(report,null,2));
    }
    return send(200,'{}','application/json');
   }
   if(req.method!=='GET')return send(405,'Method not allowed');
   const api=path.match(/^\/api\/runs\/([a-f0-9-]{36})$/);
-  if(api){const run=runs.get(api[1]);return run?send(200,JSON.stringify({id:run.id,kind:run.kind,origin,assetOrigin,phase:run.phase,requests:run.requests}),'application/json'):send(404,'Not found');}
+  if(api){const run=runs.get(api[1]);return run?send(200,JSON.stringify({id:run.id,kind:run.kind,origin,assetOrigin,phase:run.phase,requests:run.requests,diagnostics:run.diagnostics}),'application/json'):send(404,'Not found');}
   const svg=path.match(/^\/svg\/([a-f0-9-]{36})\/(safe|control)\.svg$/);
   if(svg){
    const run=runs.get(svg[1]);if(!run)return send(404,'Not found');
@@ -93,8 +118,13 @@ async function handler(req,res,serverOrigin){
    return send(200,`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><script>parent.postMessage({type:'resource-svg-active',run:'${run.id}'},'*');fetch('${assetOrigin}/probe/${run.id}/control-script')</script><rect width="40" height="20" fill="red"/></svg>`,'image/svg+xml');
   }
   let file;
-  if(path==='/'||path==='/runner')file=join(root,'test/browser/resource-acceptance.html');
+  if(path==='/css-boundary-regression.html'||path==='/css-boundary-regression.mjs')file=join(root,'test/browser',path.slice(1));
+  else if(path==='/'||path==='/runner')file=join(root,'test/browser/resource-acceptance.html');
+  else if(path==='/svg-flow-regression.html'||path==='/svg-flow-regression.mjs')file=join(root,'test/browser',path.slice(1));
+  else if(path==='/test/browser/engine-boundaries.mjs')file=join(root,'test/browser/engine-boundaries.mjs');
+  else if(path==='/svg-text-runs-regression.html'||path==='/svg-text-runs-regression.mjs'||path==='/svg-layout-regression.html'||path==='/svg-layout-regression.mjs'||path==='/image-boundary-probe.html'||path==='/image-boundary-probe.mjs'||path==='/image-boundary-tools.mjs'||path==='/image-paint-probe.html'||path==='/image-paint-probe.mjs'||path==='/image-cold-regression.html'||path==='/image-cold-regression.mjs'||path==='/paper-clip-regression.html'||path==='/paper-clip-regression.mjs'||path==='/native-downscale-regression.html'||path==='/native-downscale-regression.mjs'||path==='/engine-boundaries.html'||path==='/engine-boundaries.mjs')file=join(root,'test/browser',path.slice(1));
   else if(path==='/resource-acceptance.mjs')file=join(root,'test/browser/resource-acceptance.mjs');
+  else if(path==='/resource-runner.mjs'||path==='/resource-runner-bootstrap.mjs')file=join(root,'test/browser',path.slice(1));
   else if(path==='/font-fixture.mjs')file=join(root,'test/browser/font-fixture.mjs');
   else if(path.startsWith('/dist/')){
    file=await realpath(resolve(root,'.'+path));if(!file.startsWith(join(root,'dist')+sep))return send(403,'Forbidden');

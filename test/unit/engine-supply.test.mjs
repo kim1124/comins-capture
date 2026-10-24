@@ -41,3 +41,14 @@ test('license gate rejects altered generated code, missing legal text or missing
   assert.throws(()=>supply.validateEngineSupply({...actual,...changed},expected));
  }
 });
+test('only fixed Vs scrollbar collector call is replaced; upstream rule mechanics remain intact',()=>{
+ const {code,provenance}=supply.createEngineSupply(original,license,'3.2.0');
+ assert.equal(code.split('__cominsScrollbar(t.element,t)').length-1,1);
+ assert.equal(code.includes('Vf(t.element?.ownerDocument||document)'),false);
+ assert.ok(provenance.modifiedFunctions.includes('Vs'));
+ const before=ts.createSourceFile('before',original,99,true,1),after=ts.createSourceFile('after',code,99,true,1);
+ for(const name of ['yo','Vf']){
+  const get=f=>f.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name).getText(f);
+  assert.equal(get(after),get(before));
+ }
+});

@@ -1,4 +1,5 @@
 import {capture} from '/dist/index.js';
+import {describeSvg,serializeRaster,saveBrowserEvidence} from '/image-boundary-tools.mjs';
 const results=[],fontRequests=[];
 const assert=(value,message)=>{if(!value)throw Error(message);};
 const nativeFontFace=globalThis.FontFace;
@@ -8,7 +9,7 @@ globalThis.FontFace=class extends nativeFontFace {
 };
 async function check(name,work){
  try{await work();results.push({name,status:'pass'});}
- catch(error){results.push({name,status:'failed',error:error.code??error.message,stage:error.stage});}
+ catch(error){results.push({name,status:'failed',error:error.code??error.message,stage:error.stage,...(error.evidence?{evidence:error.evidence}:{}),...(error.evidenceError?{evidenceError:error.evidenceError}:{})});}
 }
 try{
  for(const filled of [false,true])await check(`material-symbols-${filled?'filled':'outlined'}`,async()=>{
@@ -32,15 +33,23 @@ try{
   for(const kind of ['image','background'])await check(`downscaled-${mime}-${kind}`,async()=>{
    const node=document.createElement(kind==='image'?'img':'div');node.style.cssText='display:block;width:100px;height:100px';
    if(kind==='image'){node.src=url;await node.decode();}else{node.style.backgroundImage=`url("${url}")`;node.style.backgroundSize='contain';node.style.backgroundRepeat='no-repeat';}
-   document.body.append(node);const before=node.outerHTML;let snapshot;
+   document.body.append(node);const before=node.outerHTML;let snapshot,svg,output;
    try{
     snapshot=await capture(node,{resources:{network:'deny',resolve:()=>blob}});
-    const svg=(await snapshot.toSvg()).value;assert(svg.includes(`data:${mime};base64,`),'Prepared image missing');
-    const output=(await snapshot.toCanvas()).value;
+    svg=(await snapshot.toSvg()).value;assert(svg.includes(`data:${mime};base64,`),'Prepared image missing');
+    output=(await snapshot.toCanvas()).value;
     assert(output.width===100&&output.height===100,'Output geometry mismatch');
     assert(output.getContext('2d').getImageData(50,50,1,1).data[3]===255,'Image output missing');
     output.width=output.height=0;assert(node.outerHTML===before,'Source changed');
-   }finally{snapshot?.dispose();node.remove();}
+   }catch(error){
+    if(svg&&new URLSearchParams(location.search).get('save')==='1'){
+     const report={case:`downscaled-${mime}-${kind}`,error:error.code??error.message,userAgent:navigator.userAgent,structure:describeSvg(svg),sourceUnchanged:node.outerHTML===before};
+     const files={'raw.svg':svg,'current-1.svg':serializeRaster(svg)};
+     if(output)files['public-1.png']=output.toDataURL();
+     try{error.evidence=await saveBrowserEvidence('engine-boundary',report,files);}catch{error.evidenceError='authored-evidence-save-failed';}
+    }
+    throw error;
+   }finally{if(output)output.width=output.height=0;snapshot?.dispose();node.remove();}
   });
  }finally{URL.revokeObjectURL(url);}
  }
