@@ -36,11 +36,15 @@ async function request(fetch,url,options,timeoutMs){
   finally{clearTimeout(timer);}
 }
 function brokerUrl(value){
-  try{
-    const url=new URL(value);
-    if(url.protocol!=='https:'||!url.hostname.endsWith('.actions.githubusercontent.com')||url.username||url.password||url.port||url.hash||!url.pathname.endsWith('/idtoken')||url.searchParams.has('audience'))return;
-    url.searchParams.append('audience',AUDIENCE);return url;
-  }catch{return;}
+  let url;
+  try{url=new URL(value);}catch{return {reason:'broker_url_invalid'};}
+  if(url.protocol!=='https:')return {reason:'broker_protocol'};
+  if(!url.hostname.endsWith('.actions.githubusercontent.com'))return {reason:'broker_host'};
+  if(url.username||url.password)return {reason:'broker_userinfo'};
+  if(url.port)return {reason:'broker_port'};
+  if(url.hash)return {reason:'broker_fragment'};
+  // npm 11.17 appends its audience to the provider URL without assuming its route.
+  url.searchParams.append('audience',AUDIENCE);return {url};
 }
 
 function initialReport(env){
@@ -60,9 +64,9 @@ export async function run({env=process.env,packageJson,fetch=globalThis.fetch,wr
     if(report.presence.overrideToken){idToken=env.NPM_ID_TOKEN;report.tokenSource='environment';}
     else{
       if(!report.presence.requestUrl||!report.presence.requestToken){report.reason='missing_request';return finish();}
-      const url=brokerUrl(env.ACTIONS_ID_TOKEN_REQUEST_URL);if(!url){report.reason='invalid_broker';return finish();}
+      const broker=brokerUrl(env.ACTIONS_ID_TOKEN_REQUEST_URL);if(!broker.url){report.reason=broker.reason;return finish();}
       report.stage='github-request';report.tokenSource='github';report.brokerAttempted=true;
-      const result=await request(fetch,url.href,{method:'GET',headers:{Accept:'application/json','User-Agent':'comins-capture-oidc-diagnostic/1',Authorization:`Bearer ${env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`}},timeoutMs);
+      const result=await request(fetch,broker.url.href,{method:'GET',headers:{Accept:'application/json','User-Agent':'comins-capture-oidc-diagnostic/1',Authorization:`Bearer ${env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`}},timeoutMs);
       report.brokerHttpStatus=result.status;
       if(result.kind!=='ok'){report.reason=reason(result.kind,'broker');return finish();}
       body=result.body;idToken=body?.value;body=undefined;

@@ -14,7 +14,7 @@ async function execute({env=environment(),packageJson=pkg,responses=[json({value
  assert.deepEqual(Object.keys(report).sort(),['brokerHttpStatus','environmentMatches','exchangeHttpStatus','presence','reason','schemaVersion','stage','tokenSource','brokerAttempted','exchangeAttempted'].sort());
  for(const group of [report.environmentMatches,report.presence])for(const value of Object.values(group))assert.equal(typeof value,'boolean');
  assert.ok(['preflight','github-request','registry-exchange','complete'].includes(report.stage));
- assert.ok(['ok','preflight_failed','missing_request','invalid_broker','broker_http','broker_json','missing_id_token','exchange_http','exchange_json','missing_exchange_token','timeout','network_error','internal_error'].includes(report.reason));
+ assert.ok(['ok','preflight_failed','missing_request','broker_url_invalid','broker_protocol','broker_host','broker_userinfo','broker_port','broker_fragment','broker_http','broker_json','missing_id_token','exchange_http','exchange_json','missing_exchange_token','timeout','network_error','internal_error'].includes(report.reason));
  assert.ok(['none','environment','github'].includes(report.tokenSource));assert.equal(typeof report.brokerAttempted,'boolean');assert.equal(typeof report.exchangeAttempted,'boolean');
  for(const call of calls){assert.equal(call.options.headers['User-Agent'],'comins-capture-oidc-diagnostic/1');assert.equal(call.options.headers['npm-command'],undefined);assert.equal(call.options.redirect,'error');assert.ok(call.options.signal instanceof AbortSignal);assert.ok(!/stage|publish/.test(new URL(call.url).pathname));}
  return {code,report,calls};
@@ -34,7 +34,7 @@ test('preflight/missing environment and untrusted broker never acquire tokens',a
  for(const options of [{env:{...environment(),GITHUB_REPOSITORY:'elsewhere'}},{env:{...environment(),REQUESTED_VERSION:'0.0.1'}},{packageJson:{...pkg,version:'0.0.1'}},{packageJson:{...pkg,name:'other'}}]){const r=await execute(options);assert.equal(r.code,1);assert.equal(r.report.reason,'preflight_failed');assert.equal(r.calls.length,0);}
  for(const key of ['ACTIONS_ID_TOKEN_REQUEST_TOKEN','ACTIONS_ID_TOKEN_REQUEST_URL']){const env=environment();delete env[key];const r=await execute({env});assert.equal(r.report.reason,'missing_request');assert.equal(r.calls.length,0);}
  const credentialedBroker=new URL(environment().ACTIONS_ID_TOKEN_REQUEST_URL);credentialedBroker.username='placeholder';credentialedBroker.password='placeholder';assert.equal(credentialedBroker.username,'placeholder');assert.equal(credentialedBroker.password,'placeholder');
- for(const url of ['http://vstoken.actions.githubusercontent.com/path/idtoken','https://evil.invalid/idtoken','https://actions.githubusercontent.com.evil.invalid/idtoken',credentialedBroker.href,'https://vstoken.actions.githubusercontent.com/path/other','https://vstoken.actions.githubusercontent.com:444/path/idtoken','https://vstoken.actions.githubusercontent.com/path/idtoken?audience=evil']){const r=await execute({env:{...environment(),ACTIONS_ID_TOKEN_REQUEST_URL:url}});assert.equal(r.report.reason,'invalid_broker');assert.equal(r.calls.length,0);}
+ for(const [url,reason] of [[secret,'broker_url_invalid'],['http://vstoken.actions.githubusercontent.com/path/idtoken','broker_protocol'],['https://evil.invalid/idtoken','broker_host'],['https://actions.githubusercontent.com.evil.invalid/idtoken','broker_host'],[credentialedBroker.href,'broker_userinfo'],['https://vstoken.actions.githubusercontent.com:444/path/idtoken','broker_port'],['https://vstoken.actions.githubusercontent.com/path/idtoken#placeholder','broker_fragment']]){const r=await execute({env:{...environment(),ACTIONS_ID_TOKEN_REQUEST_URL:url}});assert.equal(r.report.reason,reason);assert.equal(r.calls.length,0);assert.equal(r.report.brokerAttempted,false);assert.equal(r.report.exchangeAttempted,false);}
 });
 test('HTTP rejection bodies and sensitive errors never reach logs or start subsequent steps',async()=>{
  for(const status of [301,400,401,403,404,429,500]){
@@ -59,4 +59,12 @@ test('bounded transport bodies and hanging body/fetch cannot retain an unbounded
 test('CLI preflight prints one fixed-schema result and no stderr even with secret environment mismatches',()=>{
  const result=spawnSync(process.execPath,['scripts/diagnose-npm-oidc.mjs'],{encoding:'utf8',env:{GITHUB_REPOSITORY:secret,NPM_ID_TOKEN:secret}});
  assert.equal(result.status,1);assert.equal(result.stderr,'');assert.ok(!result.stdout.includes(secret));assert.equal(JSON.parse(result.stdout).reason,'preflight_failed');
+});
+
+test('provider-owned paths and existing queries retain official npm audience append semantics',async()=>{
+ for(const path of ['/', '/alternate/broker', '/mixed/IdToken']){
+  const url=new URL('https://vstoken.actions.githubusercontent.com'+path);url.searchParams.append('api-version','2.0');url.searchParams.append('audience','placeholder');url.searchParams.append('audience','placeholder-second');url.searchParams.append('probe',secret);
+  const {code,calls,report}=await execute({env:{...environment(),ACTIONS_ID_TOKEN_REQUEST_URL:url.href}});assert.equal(code,0);assert.equal(report.reason,'ok');assert.equal(calls.length,2);
+  const requested=new URL(calls[0].url);assert.equal(requested.pathname,path);assert.equal(requested.searchParams.get('api-version'),'2.0');assert.equal(requested.searchParams.get('probe'),secret);assert.deepEqual(requested.searchParams.getAll('audience'),['placeholder','placeholder-second','npm:registry.npmjs.org']);assert.equal(calls[0].options.method,'GET');
+ }
 });
