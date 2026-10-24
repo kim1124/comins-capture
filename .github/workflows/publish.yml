@@ -3,6 +3,14 @@ name: Stage npm package
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: Stage the package or diagnose OIDC token exchange only
+        required: true
+        type: choice
+        default: stage
+        options:
+          - stage
+          - diagnose-oidc
       version:
         description: Exact package.json version to stage after bootstrap
         required: true
@@ -17,7 +25,7 @@ concurrency:
 
 jobs:
   verify-and-pack:
-    if: github.ref == 'refs/heads/codex-governance-v111'
+    if: inputs.mode == 'stage' && github.ref == 'refs/heads/codex-governance-v111'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -86,7 +94,7 @@ jobs:
 
   stage:
     needs: verify-and-pack
-    if: github.ref == 'refs/heads/codex-governance-v111'
+    if: inputs.mode == 'stage' && github.ref == 'refs/heads/codex-governance-v111'
     environment: npm
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -119,3 +127,25 @@ jobs:
           node scripts/verify-release-artifact.mjs --digest "package-artifact/$PACKAGE_FILE" "$EXPECTED_SHA256"
           node scripts/check-npm-public-identity.mjs
           npm stage publish "./package-artifact/$PACKAGE_FILE" --ignore-scripts --access=public --registry=https://registry.npmjs.org/
+
+  # This mutually exclusive route never runs verify-and-pack or stage.
+  diagnose-oidc:
+    if: inputs.mode == 'diagnose-oidc' && github.ref == 'refs/heads/codex-governance-v111'
+    environment: npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Diagnose OIDC request and package token exchange only
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: node scripts/diagnose-npm-oidc.mjs
