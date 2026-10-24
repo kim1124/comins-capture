@@ -95,8 +95,8 @@ test('publish workflow isolates diagnostic OIDC from stage, preserves immutable 
   assert.ok(workflow.indexOf('id-token: write')>workflow.indexOf('  stage:'));
   assert.equal((workflow.match(/environment: npm/g)||[]).length,2);
   assert.match(workflow,/verify-release-artifact\.mjs --digest/);
-  assert.equal(workflow.match(/^\s*npm stage publish "([^"]+)"/m)?.[1],'./package-artifact/$PACKAGE_FILE');
-  assert.match(workflow,/npm stage publish/);assert.doesNotMatch(workflow,/\bnpm publish\b|NODE_AUTH_TOKEN|NPM_TOKEN/);
+  assert.equal(workflow.match(/^\s*node scripts\/stage-npm-package\.mjs "([^"]+)"/m)?.[1],'./package-artifact/$PACKAGE_FILE');
+  assert.match(workflow,/node scripts\/stage-npm-package\.mjs/);assert.doesNotMatch(workflow,/\bnpm stage publish\b/);assert.doesNotMatch(workflow,/\bnpm publish\b|NODE_AUTH_TOKEN|NPM_TOKEN/);
   assert.equal((workflow.match(/check-npm-public-identity\.mjs/g)||[]).length,2);
   for(const line of workflow.split('\n').filter(l=>l.includes('uses:')))assert.match(line,/@[a-f0-9]{40}\b/);
 });

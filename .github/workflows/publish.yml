@@ -126,7 +126,7 @@ jobs:
           set -euo pipefail
           node scripts/verify-release-artifact.mjs --digest "package-artifact/$PACKAGE_FILE" "$EXPECTED_SHA256"
           node scripts/check-npm-public-identity.mjs
-          npm stage publish "./package-artifact/$PACKAGE_FILE" --ignore-scripts --access=public --registry=https://registry.npmjs.org/
+          node scripts/stage-npm-package.mjs "./package-artifact/$PACKAGE_FILE"
 
   # This mutually exclusive route never runs verify-and-pack or stage.
   diagnose-oidc:
