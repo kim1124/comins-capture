@@ -4,7 +4,7 @@ import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import test from 'node:test';
-import {run as identity, validateCurrentIdentity} from '../../scripts/check-npm-public-identity.mjs';
+import {run as identity, validateCurrentIdentity, validateManualSessionPublishedIdentity} from '../../scripts/check-npm-public-identity.mjs';
 import {validateInventory, verifyDigest} from '../../scripts/verify-release-artifact.mjs';
 
 const person = {name:'comins-service',email:['service','example.test'].join('@')};
@@ -129,4 +129,21 @@ test('session preparation is a separate0.0.2 canonical one-pack proof job and de
  assert.match(job,/node scripts\/session-stage-provenance\.mjs generate/);assert.match(job,/comins-capture-0\.0\.2\.sigstore\.json/);assert.match(job,/session-stage\.json/);assert.match(job,/npm-session-stage-/);
  assert.doesNotMatch(job,/npm stage|npm publish|stage-npm-session-package|download-artifact|needs:/);
  const ordinary=w.slice(w.indexOf('  verify-and-pack:')).split('\n  stage:')[0];assert.doesNotMatch(ordinary,/id-token: write|environment: npm|generateProvenance/);assert.match(ordinary,/inputs.mode == 'stage'/);
+});
+
+test('manual0.0.2 validator accepts only an absent or exact approved two-own-key approver',()=>{
+ const base={maintainers:[person],npmUser:person,author:null,contributors:[]};
+ for(const approver of [undefined,null,{...person}])assert.equal(validateManualSessionPublishedIdentity({...base,npmUser:{...person,approver}},person),true);
+ const inherited=Object.create(person),missingOwn=Object.assign(Object.create({email:person.email}),{name:person.name});
+ const hidden=Object.defineProperty({...person},'token',{value:'explicit-placeholder'});
+ const hiddenName=Object.defineProperty({email:person.email},'name',{value:person.name});
+ for(const approver of [{...person,name:'other-service'},{...person,email:['other','example.test'].join('@')},[],[person],'explicit-placeholder',{}, {name:person.name},{email:person.email},inherited,missingOwn,hidden,hiddenName,{...person,trustedPublisher:{id:'github'}},{...person,token:'explicit-placeholder'},{...person,approver:person},{...person,[Symbol('extra')]:'explicit-placeholder'}])assert.equal(validateManualSessionPublishedIdentity({...base,npmUser:{...person,approver}},person),false);
+});
+test('manual0.0.2 CLI contract accepts the approved approver without broadening other modes or versions',()=>{
+ const metadata={maintainers:[person],_npmUser:{...person,approver:{...person}},author:null,contributors:[]};
+ const opt={env:{...env,COMINS_CAPTURE_MANUAL_STAGE_0_0_2:'true'}};
+ assert.equal(check(['--manual-session-version','0.0.2'],metadata,opt).result,0);
+ failed(check(['--manual-session-version','0.0.2'],metadata));failed(check(['--version','0.0.2'],metadata,opt));
+ for(const v of ['0.0.1','0.0.3','1.0.0'])failed(check(['--manual-session-version',v],metadata,opt));
+ for(const approver of [{...person,name:'other-service'},{...person,email:['other','example.test'].join('@')},[],[person],'explicit-placeholder',{}, {name:person.name},{...person,trustedPublisher:{id:'github'}},{...person,token:'explicit-placeholder'},{...person,approver:person}])failed(check(['--manual-session-version','0.0.2'],{...metadata,_npmUser:{...person,approver}},opt));
 });
