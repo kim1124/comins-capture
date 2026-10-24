@@ -133,9 +133,16 @@ export function validateBootstrapPublishedIdentity(
 export function validateManualSessionPublishedIdentity(
   { maintainers, npmUser, author, contributors } = {}, expected,
 ) {
+  const approver = npmUser?.approver;
+  const validApprover = approver == null || (
+    typeof approver === 'object' && !Array.isArray(approver)
+    && Reflect.ownKeys(approver).length === 2
+    && ['name', 'email'].every(key => Object.prototype.propertyIsEnumerable.call(approver, key))
+    && validateCurrentIdentity(approver, expected)
+  );
   return validateCurrentIdentity(maintainers, expected)
     && validateCurrentIdentity(npmUser, expected)
-    && npmUser?.trustedPublisher == null && npmUser?.approver == null
+    && npmUser?.trustedPublisher == null && validApprover
     && isEmptyPersonMetadata(author) && isEmptyPersonMetadata(contributors);
 }
 
