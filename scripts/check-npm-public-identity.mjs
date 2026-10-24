@@ -130,6 +130,15 @@ export function validateBootstrapPublishedIdentity(
     && isEmptyPersonMetadata(contributors);
 }
 
+export function validateManualSessionPublishedIdentity(
+  { maintainers, npmUser, author, contributors } = {}, expected,
+) {
+  return validateCurrentIdentity(maintainers, expected)
+    && validateCurrentIdentity(npmUser, expected)
+    && npmUser?.trustedPublisher == null && npmUser?.approver == null
+    && isEmptyPersonMetadata(author) && isEmptyPersonMetadata(contributors);
+}
+
 export function run(options = {}) {
   const args = options.args ?? process.argv.slice(2);
   const env = options.env ?? process.env;
@@ -145,16 +154,18 @@ export function run(options = {}) {
         mode = 'profile';
       } else if (
         args.length === 2
-        && (args[0] === '--version' || args[0] === '--bootstrap-version')
+        && (args[0] === '--version' || args[0] === '--bootstrap-version' || args[0] === '--manual-session-version')
         && typeof args[1] === 'string'
         && EXACT_SEMVER.test(args[1])
       ) {
-        mode = args[0] === '--version' ? 'version' : 'bootstrap-version';
+        mode = args[0] === '--version' ? 'version' : args[0] === '--bootstrap-version' ? 'bootstrap-version' : 'manual-session-version';
         version = args[1];
       } else {
         return fail(writeError);
       }
     }
+
+    if (mode === 'manual-session-version' && (version !== '0.0.2' || env.COMINS_CAPTURE_MANUAL_STAGE_0_0_2 !== 'true')) return fail(writeError);
 
     const name = typeof env.COMINS_NPM_PUBLIC_NAME === 'string'
       ? env.COMINS_NPM_PUBLIC_NAME.trim()
@@ -180,6 +191,7 @@ export function run(options = {}) {
     if (!packageJson || typeof packageJson.name !== 'string' || packageJson.name.trim() === '') {
       return fail(writeError);
     }
+    if (mode === 'manual-session-version' && packageJson.name !== 'comins-capture') return fail(writeError);
     const packageSpec = mode === 'current'
       ? packageJson.name.trim()
       : `${packageJson.name.trim()}@${version}`;
@@ -196,6 +208,8 @@ export function run(options = {}) {
     };
     const valid = mode === 'current'
       ? validateCurrentIdentity(maintainers, expected[0])
+      : mode === 'manual-session-version'
+        ? validateManualSessionPublishedIdentity(publishedMetadata, expected[0])
       : mode === 'bootstrap-version'
         ? validateBootstrapPublishedIdentity(publishedMetadata, expected[0])
         : validatePublishedIdentity(publishedMetadata, expected[0]);

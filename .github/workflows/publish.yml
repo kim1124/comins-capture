@@ -12,6 +12,7 @@ on:
           - stage
           - diagnose-oidc
           - verify-oidc-claims
+          - prepare-session-stage
       version:
         description: Exact package.json version to stage after bootstrap
         required: true
@@ -128,6 +129,98 @@ jobs:
           node scripts/verify-release-artifact.mjs --digest "package-artifact/$PACKAGE_FILE" "$EXPECTED_SHA256"
           node scripts/check-npm-public-identity.mjs
           node scripts/stage-npm-package.mjs "./package-artifact/$PACKAGE_FILE"
+
+  # Explicit 0.0.2 exception: prepare proof only; existing local session stages later.
+  prepare-session-stage:
+    if: inputs.mode == 'prepare-session-stage' && inputs.version == '0.0.2' && github.ref == 'refs/heads/codex-governance-v111'
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      package-file: ${{ steps.pack.outputs.package-file }}
+      sha256: ${{ steps.pack.outputs.sha256 }}
+      bundle-sha256: ${{ steps.session.outputs.bundle-sha256 }}
+      source-sha: ${{ steps.session.outputs.source-sha }}
+      run-id: ${{ steps.session.outputs.run-id }}
+      run-attempt: ${{ steps.session.outputs.run-attempt }}
+    env:
+      GITLEAKS_VERSION: '8.30.1'
+      GITLEAKS_ARCHIVE: gitleaks_8.30.1_linux_x64.tar.gz
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm install --global npm@11.17.0 --ignore-scripts
+      - name: Verify public history and requested version
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-public-identities.mjs "$GITHUB_SHA"
+          node --input-type=module -e 'import fs from "node:fs"; const p=JSON.parse(fs.readFileSync("package.json")); if(p.version!==process.env.REQUESTED_VERSION) process.exit(1);'
+      - name: Require existing bootstrap and current maintainer identity
+        env:
+          COMINS_NPM_PUBLIC_NAME: ${{ secrets.COMINS_NPM_PUBLIC_NAME }}
+          COMINS_NPM_PUBLIC_EMAIL: ${{ secrets.COMINS_NPM_PUBLIC_EMAIL }}
+        run: node scripts/check-npm-public-identity.mjs
+      - run: npm ci --ignore-scripts
+      - run: npm run verify
+      - name: Install pinned Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive_path=$(mktemp "${RUNNER_TEMP}/comins-gitleaks.XXXXXX.tar.gz")
+          trap 'rm -f "$archive_path"' EXIT
+          curl --fail --silent --show-error --location --output "$archive_path" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${GITLEAKS_ARCHIVE}"
+          printf '%s  %s\n' "$GITLEAKS_SHA256" "$archive_path" | sha256sum --check --status
+          install -d .local/bin
+          tar -xzf "$archive_path" -C .local/bin gitleaks
+          test "$(.local/bin/gitleaks version)" = "$GITLEAKS_VERSION"
+      - name: Verify security controls
+        env:
+          GITLEAKS_BIN: .local/bin/gitleaks
+        run: node --test test/security/*.test.mjs
+      - name: Verify and pack exactly one artifact
+        id: pack
+        env:
+          GITLEAKS_BIN: .local/bin/gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_file=$(node scripts/verify-release-artifact.mjs)
+          artifact_sha256=$(sha256sum "$package_file" | cut -d ' ' -f 1)
+          printf 'package-file=%s\nsha256=%s\n' "$package_file" "$artifact_sha256" >> "$GITHUB_OUTPUT"
+      - name: Generate and verify provenance for the same canonical run
+        id: session
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/session-stage-provenance.mjs generate
+          node --input-type=module -e 'import{readFileSync,appendFileSync}from"node:fs";const m=JSON.parse(readFileSync("session-stage.json"));appendFileSync(process.env.GITHUB_OUTPUT,`bundle-sha256=${m.bundleSHA256}\nsource-sha=${m.sourceSHA}\nrun-id=${m.runId}\nrun-attempt=${m.runAttempt}\n`);'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-session-stage-${{ inputs.version }}
+          path: |
+            comins-capture-0.0.2.tgz
+            comins-capture-0.0.2.sigstore.json
+            session-stage.json
+          if-no-files-found: error
+          retention-days: 1
+
+
 
   # This mutually exclusive route never runs verify-and-pack or stage.
   diagnose-oidc:

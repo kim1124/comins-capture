@@ -91,13 +91,13 @@ test('artifact transfer detects changed bytes and rejects malformed digests',()=
 test('publish workflow isolates diagnostic OIDC from stage, preserves immutable artifact transfer and never publishes directly',()=>{
   const workflow=readFileSync(new URL('../../.github/workflows/publish.yml',import.meta.url),'utf8');
   assert.match(workflow,/workflow_dispatch:/);assert.doesNotMatch(workflow,/pull_request|push:/);
-  assert.equal((workflow.match(/id-token: write/g)||[]).length,3);
+  assert.equal((workflow.match(/id-token: write/g)||[]).length,4);
   assert.ok(workflow.indexOf('id-token: write')>workflow.indexOf('  stage:'));
-  assert.equal((workflow.match(/environment: npm/g)||[]).length,3);
+  assert.equal((workflow.match(/environment: npm/g)||[]).length,4);
   assert.match(workflow,/verify-release-artifact\.mjs --digest/);
   assert.equal(workflow.match(/^\s*node scripts\/stage-npm-package\.mjs "([^"]+)"/m)?.[1],'./package-artifact/$PACKAGE_FILE');
   assert.match(workflow,/node scripts\/stage-npm-package\.mjs/);assert.doesNotMatch(workflow,/\bnpm stage publish\b/);assert.doesNotMatch(workflow,/\bnpm publish\b|NODE_AUTH_TOKEN|NPM_TOKEN/);
-  assert.equal((workflow.match(/check-npm-public-identity\.mjs/g)||[]).length,2);
+  assert.equal((workflow.match(/check-npm-public-identity\.mjs/g)||[]).length,3);
   for(const line of workflow.split('\n').filter(l=>l.includes('uses:')))assert.match(line,/@[a-f0-9]{40}\b/);
 });
 
@@ -109,4 +109,24 @@ test('diagnostic mode skips pack and stage while default stage retains the prote
  const diagnostic=workflow.slice(workflow.indexOf('  diagnose-oidc:')).split('\n  # Claims verification')[0];assert.match(diagnostic,/if:.*inputs.mode == 'diagnose-oidc'.*github.ref == 'refs\/heads\/codex-governance-v111'/);
  assert.match(diagnostic,/environment: npm/);assert.match(diagnostic,/id-token: write/);assert.match(diagnostic,/REQUESTED_VERSION: \$\{\{ inputs.version \}\}/);
  assert.match(diagnostic,/run: node scripts\/diagnose-npm-oidc\.mjs/);assert.equal((diagnostic.match(/\brun:/g)||[]).length,1);assert.doesNotMatch(diagnostic,/npm (?:ci|install|stage|publish|pack)|verify-and-pack|needs:|upload-artifact|download-artifact/);
+});
+
+test('manual publisher exception is explicit and limited to comins-capture0.0.2 without changing default policy',()=>{
+ const metadata={maintainers:[person],_npmUser:person,author:null,contributors:[]};
+ const opt={env:{...env,COMINS_CAPTURE_MANUAL_STAGE_0_0_2:'true'}};
+ assert.equal(check(['--manual-session-version','0.0.2'],metadata,opt).result,0);
+ failed(check(['--manual-session-version','0.0.2'],metadata));
+ for(const version of ['0.0.1','0.0.3','1.0.0'])failed(check(['--manual-session-version',version],metadata,opt));
+ failed(check(['--version','0.0.2'],metadata,opt));
+ for(const override of [{author:person},{contributors:[person]},{_npmUser:{...person,trustedPublisher:{id:'github'}}},{maintainers:[person,person]}])failed(check(['--manual-session-version','0.0.2'],{...metadata,...override},opt));
+});
+test('session preparation is a separate0.0.2 canonical one-pack proof job and default stage guards are unchanged',()=>{
+ const w=readFileSync(new URL('../../.github/workflows/publish.yml',import.meta.url),'utf8');
+ const job=w.slice(w.indexOf('  prepare-session-stage:')).split('\n  # This mutually exclusive')[0];
+ assert.match(job,/inputs.mode == 'prepare-session-stage'.*inputs.version == '0.0.2'.*github.ref == 'refs\/heads\/codex-governance-v111'/);
+ assert.match(job,/environment: npm/);assert.match(job,/id-token: write/);assert.match(job,/npm run verify/);assert.match(job,/node --test test\/security\/\*\.test\.mjs/);
+ assert.equal((job.match(/node scripts\/verify-release-artifact\.mjs\)/g)||[]).length,1);
+ assert.match(job,/node scripts\/session-stage-provenance\.mjs generate/);assert.match(job,/comins-capture-0\.0\.2\.sigstore\.json/);assert.match(job,/session-stage\.json/);assert.match(job,/npm-session-stage-/);
+ assert.doesNotMatch(job,/npm stage|npm publish|stage-npm-session-package|download-artifact|needs:/);
+ const ordinary=w.slice(w.indexOf('  verify-and-pack:')).split('\n  stage:')[0];assert.doesNotMatch(ordinary,/id-token: write|environment: npm|generateProvenance/);assert.match(ordinary,/inputs.mode == 'stage'/);
 });
