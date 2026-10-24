@@ -91,9 +91,9 @@ test('artifact transfer detects changed bytes and rejects malformed digests',()=
 test('publish workflow isolates diagnostic OIDC from stage, preserves immutable artifact transfer and never publishes directly',()=>{
   const workflow=readFileSync(new URL('../../.github/workflows/publish.yml',import.meta.url),'utf8');
   assert.match(workflow,/workflow_dispatch:/);assert.doesNotMatch(workflow,/pull_request|push:/);
-  assert.equal((workflow.match(/id-token: write/g)||[]).length,2);
+  assert.equal((workflow.match(/id-token: write/g)||[]).length,3);
   assert.ok(workflow.indexOf('id-token: write')>workflow.indexOf('  stage:'));
-  assert.equal((workflow.match(/environment: npm/g)||[]).length,2);
+  assert.equal((workflow.match(/environment: npm/g)||[]).length,3);
   assert.match(workflow,/verify-release-artifact\.mjs --digest/);
   assert.equal(workflow.match(/^\s*node scripts\/stage-npm-package\.mjs "([^"]+)"/m)?.[1],'./package-artifact/$PACKAGE_FILE');
   assert.match(workflow,/node scripts\/stage-npm-package\.mjs/);assert.doesNotMatch(workflow,/\bnpm stage publish\b/);assert.doesNotMatch(workflow,/\bnpm publish\b|NODE_AUTH_TOKEN|NPM_TOKEN/);
@@ -106,7 +106,7 @@ test('diagnostic mode skips pack and stage while default stage retains the prote
  assert.match(workflow,/mode:\n\s+description:[^\n]+\n\s+required: true\n\s+type: choice\n\s+default: stage\n\s+options:\n\s+- stage\n\s+- diagnose-oidc/);
  for(const name of ['verify-and-pack','stage']){const job=workflow.slice(workflow.indexOf('  '+name+':')).split(/\n  [a-z][a-z-]+:/)[0];assert.match(job,/if:.*inputs.mode == 'stage'.*github.ref == 'refs\/heads\/codex-governance-v111'/);}
  const stage=workflow.slice(workflow.indexOf('  stage:'));assert.match(stage,/needs: verify-and-pack/);
- const diagnostic=workflow.slice(workflow.indexOf('  diagnose-oidc:'));assert.match(diagnostic,/if:.*inputs.mode == 'diagnose-oidc'.*github.ref == 'refs\/heads\/codex-governance-v111'/);
+ const diagnostic=workflow.slice(workflow.indexOf('  diagnose-oidc:')).split('\n  # Claims verification')[0];assert.match(diagnostic,/if:.*inputs.mode == 'diagnose-oidc'.*github.ref == 'refs\/heads\/codex-governance-v111'/);
  assert.match(diagnostic,/environment: npm/);assert.match(diagnostic,/id-token: write/);assert.match(diagnostic,/REQUESTED_VERSION: \$\{\{ inputs.version \}\}/);
  assert.match(diagnostic,/run: node scripts\/diagnose-npm-oidc\.mjs/);assert.equal((diagnostic.match(/\brun:/g)||[]).length,1);assert.doesNotMatch(diagnostic,/npm (?:ci|install|stage|publish|pack)|verify-and-pack|needs:|upload-artifact|download-artifact/);
 });

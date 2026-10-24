@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Stage the package or diagnose OIDC token exchange only
+        description: Stage the package or diagnose OIDC exchange or verified claims
         required: true
         type: choice
         default: stage
         options:
           - stage
           - diagnose-oidc
+          - verify-oidc-claims
       version:
         description: Exact package.json version to stage after bootstrap
         required: true
@@ -149,3 +150,34 @@ jobs:
         env:
           REQUESTED_VERSION: ${{ inputs.version }}
         run: node scripts/diagnose-npm-oidc.mjs
+
+  # Claims verification never exchanges a registry token or uploads a package.
+  verify-oidc-claims:
+    if: inputs.mode == 'verify-oidc-claims' && github.ref == 'refs/heads/codex-governance-v111'
+    environment: npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Verify GitHub signed claims with isolated pinned tooling only
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tools=$(mktemp -d "${RUNNER_TEMP}/capture-oidc-jose.XXXXXX")
+          trap 'rm -rf "$tools"' EXIT
+          curl --fail --silent --connect-timeout 10 --max-time 20 --max-filesize 2000000 --output "$tools/jose.tgz" https://registry.npmjs.org/jose/-/jose-6.2.12.tgz
+          node --input-type=module -e 'import{readFileSync}from"node:fs";import{createHash}from"node:crypto";if(createHash("sha512").update(readFileSync(process.argv[1])).digest("base64")!=="9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==")process.exit(1);' "$tools/jose.tgz"
+          touch "$tools/userconfig" "$tools/globalconfig"
+          npm install --offline --prefix "$tools" "$tools/jose.tgz" --ignore-scripts --package-lock=false --no-audit --no-fund --logs-max=0 --timing=false --update-notifier=false --userconfig="$tools/userconfig" --globalconfig="$tools/globalconfig" --cache="$tools/cache" --logs-dir="$tools/logs" >/dev/null 2>&1
+          JOSE_TOOLING_ROOT="$tools" node scripts/verify-github-oidc.mjs
